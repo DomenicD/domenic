@@ -11,19 +11,19 @@
 
 using namespace std;
 
-__global__ void merge_sort(float *arr, int length, int chunk)
+__global__ void merge_sort(float *arr, long length, long chunk)
 {
-	int start = (blockIdx.x * blockDim.x + threadIdx.x) * chunk;
+	long start = (blockIdx.x * blockDim.x + threadIdx.x) * chunk;
 	if (start >= length)
 	{
 		return;
 	}
 
-	int middle = min(start + chunk / 2, length);
-	int end = min(start + chunk, length);
-	int left = start;
-	int right = middle;
-	int i = 0;
+	long middle = min(start + chunk / 2, length);
+	long end = min(start + chunk, length);
+	long left = start;
+	long right = middle;
+	long i = 0;
 	float* temp = new float[chunk]{0.f};
 
 	while (left < middle || right < end)
@@ -39,18 +39,18 @@ __global__ void merge_sort(float *arr, int length, int chunk)
 		temp[i++] = result;
 	}	
 
-	for (int index = 0; start + index < end; index++)
+	for (long index = 0; start + index < end; index++)
 	{
 		arr[start + index] = temp[index];
 	}
 	delete [] temp;
 }
 
-void printArray(float* arr, const int length)
+void printArray(float* arr, const long length)
 {
 	std::stringstream ss;
 	ss << "[ ";
-	for (int i = 0; i < length; i++)
+	for (long i = 0; i < length; i++)
 	{
 		ss << arr[i] << ", ";
 	}
@@ -61,8 +61,8 @@ void printArray(float* arr, const int length)
 
 int main()
 {
-	const int length = 100;
-	const int size = length * sizeof(float);
+	long length = 2147483640;
+	long size = length * sizeof(float);
 
 	cudaError_t cudaStatus;
 	curandStatus_t curandStatus;
@@ -74,12 +74,12 @@ int main()
 	cudaStatus = cudaMalloc(&arr, size);
 	curandStatus = curandGenerateUniform(gen, arr, length);
 
-	int chunk = 2;
+	long chunk = 2;
 	bool isSorted = false;
 	while (!isSorted)
 	{
-		int threads = ceilf(length / float(chunk));
-		int grids = ceilf(threads / 32.f);
+		long threads = ceilf(length / float(chunk));
+		long grids = ceilf(threads / 32.f);
 		if (grids > 0)
 		{
 			merge_sort << <grids, 32 >> >(arr, length, chunk);
@@ -94,18 +94,18 @@ int main()
 		chunk *= 2;
 	}
 
-	float sorted [length];
+	float* sorted = new float[length]{0.f};
 	cudaMemcpy(sorted, arr, size, cudaMemcpyDeviceToHost);	
 	bool isCorrect = true;
-	int i = 0;
+	long i = 0;
 	while (isCorrect && i < length - 1)
 	{
 		isCorrect = sorted[i] <= sorted[i + 1];
 		i++;
-	}
-
+	}	
 	cout << "List size: " << length << ", Is correct: " << isCorrect << endl;
 	// printArray(sorted, length);
+	delete [] sorted;
 	getchar();
     return 0;
 }
