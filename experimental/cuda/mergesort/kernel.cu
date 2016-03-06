@@ -12,9 +12,9 @@
 
 using namespace std;
 
-__global__ void merge_sort(float *d_unsorted_arr, float *d_sorted_arr,
-                           unsigned long long length,
-                           unsigned long long chunk) {
+__global__ void merge_sort_kernal(float *d_unsorted_arr, float *d_sorted_arr,
+                                  unsigned long long length,
+                                  unsigned long long chunk) {
   unsigned long long start = (blockIdx.x * blockDim.x + threadIdx.x) * chunk;
   if (start >= length) {
     return;
@@ -43,7 +43,7 @@ __global__ void merge_sort(float *d_unsorted_arr, float *d_sorted_arr,
   }
 }
 
-void printArray(float *arr, const unsigned long long length) {
+void print_array(float *arr, const unsigned long long length) {
   std::stringstream ss;
   ss << "[ ";
   for (unsigned long long i = 0; i < length; i++) {
@@ -57,20 +57,20 @@ void printArray(float *arr, const unsigned long long length) {
 string timed_operation;
 chrono::system_clock::time_point start_time;
 
-void startTimer(string operation) {
+void start_timer(string operation) {
   timed_operation = operation;
   start_time = chrono::steady_clock::now();
 }
 
-void stopTimer() {
+void stop_timer() {
   auto end = chrono::steady_clock::now();
   auto diff = end - start_time;
   cout << timed_operation << " took "
        << chrono::duration<double, milli>(diff).count() << " ms" << endl;
 }
 
-void cudaMergeSort(float *d_unsorted_array, float *d_sorted_array,
-                   unsigned long long length) {
+void cuda_merge_sort(float *d_unsorted_array, float *d_sorted_array,
+                     unsigned long long length) {
   unsigned long long chunk = 2;
   bool isSorted = false;
   const int threads_per_block = 512;
@@ -80,11 +80,11 @@ void cudaMergeSort(float *d_unsorted_array, float *d_sorted_array,
     unsigned long long threads = ceilf(length / float(chunk));
     unsigned long long grids = ceilf(threads / float(threads_per_block));
     if (grids > 0) {
-      merge_sort<<<grids, threads_per_block>>>(d_unsorted_array, d_sorted_array,
-                                               length, chunk);
+      merge_sort_kernal<<<grids, threads_per_block>>>(
+          d_unsorted_array, d_sorted_array, length, chunk);
     } else {
-      merge_sort<<<1, threads>>>(d_unsorted_array, d_sorted_array, length,
-                                 chunk);
+      merge_sort_kernal<<<1, threads>>>(d_unsorted_array, d_sorted_array,
+                                        length, chunk);
     }
     if (chunk >= length) {
       isSorted = true;
@@ -93,9 +93,9 @@ void cudaMergeSort(float *d_unsorted_array, float *d_sorted_array,
   }
 }
 
-void cpuMergeSort(float *h_unsorted_array, float *h_sorted_array,
-                  unsigned long long start, unsigned long long chunk,
-                  unsigned long long length) {
+void cpu_merge_sort(float *h_unsorted_array, float *h_sorted_array,
+                    unsigned long long start, unsigned long long chunk,
+                    unsigned long long length) {
   unsigned long long middle = min(start + chunk / 2, length);
   unsigned long long end = min(start + chunk, length);
   unsigned long long left = start;
@@ -120,14 +120,15 @@ void cpuMergeSort(float *h_unsorted_array, float *h_sorted_array,
   }
 }
 
-void cpuMergeSort(float *h_unsorted_array, float *h_sorted_array,
-                  unsigned long long length) {
+void cpu_merge_sort(float *h_unsorted_array, float *h_sorted_array,
+                    unsigned long long length) {
   unsigned long long chunk = 2;
   bool isSorted = false;
   while (!isSorted) {
     unsigned long long threads = ceilf(length / float(chunk));
     for (unsigned long long i = 0; i < threads; i++) {
-      cpuMergeSort(h_unsorted_array, h_sorted_array, i * chunk, chunk, length);
+      cpu_merge_sort(h_unsorted_array, h_sorted_array, i * chunk, chunk,
+                     length);
     }
     if (chunk >= length) {
       isSorted = true;
@@ -136,7 +137,7 @@ void cpuMergeSort(float *h_unsorted_array, float *h_sorted_array,
   }
 }
 
-void checkSortedArray(float *sorted_array, unsigned long long length) {
+void check_sorted_array(float *sorted_array, unsigned long long length) {
   bool isCorrect = true;
   unsigned long long i = 0;
   while (isCorrect && i < length - 1) {
@@ -154,11 +155,11 @@ int main() {
   // sofisticated memory management. Becuase this takes up all
   // the avaliable memory on the GPU (6GB).
   // Takes the GPU 2,283 ms and the CPU 323,186 ms.
-  unsigned long long length = 1610612736 / 2;
+  // unsigned long long length = 1610612736 / 2;
 
   // A quicker experiment.
   // Takes the GPU 2,161 ms and the CPU 15,630 ms.
-  // unsigned long long length = 10000000 * 5;
+  unsigned long long length = 10000000 * 5;
 
   unsigned long long size = length * sizeof(float);
 
@@ -174,22 +175,22 @@ int main() {
   cudaStatus = cudaMalloc(&d_unsorted_array, size);
   cudaStatus = cudaMalloc(&d_sorted_array, size);
 
-  startTimer("Random number generation");
+  start_timer("Random number generation");
   curandStatus = curandGenerateUniform(gen, d_unsorted_array, length);
   cudaDeviceSynchronize();
-  stopTimer();
+  stop_timer();
 
   // Store the same sequence of random numbers to use in all tests
   float *h_unsorted_array = new float[length];
   cudaMemcpy(h_unsorted_array, d_unsorted_array, size, cudaMemcpyDeviceToHost);
 
-  startTimer("CUDA sorting");
-  cudaMergeSort(d_unsorted_array, d_sorted_array, length);
+  start_timer("CUDA sorting");
+  cuda_merge_sort(d_unsorted_array, d_sorted_array, length);
   // Copy from device and check result
   float *h_sorted_array = new float[length];
   cudaMemcpy(h_sorted_array, d_unsorted_array, size, cudaMemcpyDeviceToHost);
-  stopTimer();
-  checkSortedArray(h_sorted_array, length);
+  stop_timer();
+  check_sorted_array(h_sorted_array, length);
 
   // Clean up
   cudaFree(d_sorted_array);
@@ -198,10 +199,10 @@ int main() {
 
   // Reallocate h_sorted_array and perform sorting on CPU
   h_sorted_array = new float[length];
-  startTimer("CPU sorting");
-  cpuMergeSort(h_unsorted_array, h_sorted_array, length);
-  stopTimer();
-  checkSortedArray(h_sorted_array, length);
+  start_timer("CPU sorting");
+  cpu_merge_sort(h_unsorted_array, h_sorted_array, length);
+  stop_timer();
+  check_sorted_array(h_sorted_array, length);
 
   // Clean up
   delete[] h_sorted_array;
