@@ -13,18 +13,17 @@
 using namespace std;
 
 __global__ void merge_sort_kernal(float *d_unsorted_arr, float *d_sorted_arr,
-                                  unsigned long long length,
-                                  unsigned long long chunk) {
-  unsigned long long start = (blockIdx.x * blockDim.x + threadIdx.x) * chunk;
+                                  uint64_t length, uint64_t chunk) {
+  uint64_t start = (blockIdx.x * blockDim.x + threadIdx.x) * chunk;
   if (start >= length) {
     return;
   }
 
-  unsigned long long middle = min(start + chunk / 2, length);
-  unsigned long long end = min(start + chunk, length);
-  unsigned long long left = start;
-  unsigned long long right = middle;
-  unsigned long long index = start;
+  uint64_t middle = min(start + chunk / 2, length);
+  uint64_t end = min(start + chunk, length);
+  uint64_t left = start;
+  uint64_t right = middle;
+  uint64_t index = start;
 
   while (left < middle || right < end) {
     float result;
@@ -38,15 +37,15 @@ __global__ void merge_sort_kernal(float *d_unsorted_arr, float *d_sorted_arr,
     d_sorted_arr[index++] = result;
   }
 
-  for (unsigned long long i = start; i < end; i++) {
+  for (uint64_t i = start; i < end; i++) {
     d_unsorted_arr[i] = d_sorted_arr[i];
   }
 }
 
-void print_array(float *arr, const unsigned long long length) {
+void print_array(float *arr, const uint64_t length) {
   std::stringstream ss;
   ss << "[ ";
-  for (unsigned long long i = 0; i < length; i++) {
+  for (uint64_t i = 0; i < length; i++) {
     ss << arr[i] << ", ";
   }
   std::string str = ss.str();
@@ -70,15 +69,15 @@ void stop_timer() {
 }
 
 void cuda_merge_sort(float *d_unsorted_array, float *d_sorted_array,
-                     unsigned long long length) {
-  unsigned long long chunk = 2;
+                     uint64_t length) {
+  uint64_t chunk = 2;
   bool isSorted = false;
   const int threads_per_block = 512;
   // const int threads_per_block = 256;
   // const int threads_per_block = 32;
   while (!isSorted) {
-    unsigned long long threads = ceilf(length / float(chunk));
-    unsigned long long grids = ceilf(threads / float(threads_per_block));
+    uint64_t threads = ceilf(length / float(chunk));
+    uint64_t grids = ceilf(threads / float(threads_per_block));
     if (grids > 0) {
       merge_sort_kernal<<<grids, threads_per_block>>>(
           d_unsorted_array, d_sorted_array, length, chunk);
@@ -94,13 +93,12 @@ void cuda_merge_sort(float *d_unsorted_array, float *d_sorted_array,
 }
 
 void cpu_merge_sort(float *h_unsorted_array, float *h_sorted_array,
-                    unsigned long long start, unsigned long long chunk,
-                    unsigned long long length) {
-  unsigned long long middle = min(start + chunk / 2, length);
-  unsigned long long end = min(start + chunk, length);
-  unsigned long long left = start;
-  unsigned long long right = middle;
-  unsigned long long index = start;
+                    uint64_t start, uint64_t chunk, uint64_t length) {
+  uint64_t middle = min(start + chunk / 2, length);
+  uint64_t end = min(start + chunk, length);
+  uint64_t left = start;
+  uint64_t right = middle;
+  uint64_t index = start;
 
   while (left < middle || right < end) {
     float result;
@@ -115,18 +113,18 @@ void cpu_merge_sort(float *h_unsorted_array, float *h_sorted_array,
     h_sorted_array[index++] = result;
   }
 
-  for (unsigned long long i = start; i < end; i++) {
+  for (uint64_t i = start; i < end; i++) {
     h_unsorted_array[i] = h_sorted_array[i];
   }
 }
 
 void cpu_merge_sort(float *h_unsorted_array, float *h_sorted_array,
-                    unsigned long long length) {
-  unsigned long long chunk = 2;
+                    uint64_t length) {
+  uint64_t chunk = 2;
   bool isSorted = false;
   while (!isSorted) {
-    unsigned long long threads = ceilf(length / float(chunk));
-    for (unsigned long long i = 0; i < threads; i++) {
+    uint64_t threads = ceilf(length / float(chunk));
+    for (uint64_t i = 0; i < threads; i++) {
       cpu_merge_sort(h_unsorted_array, h_sorted_array, i * chunk, chunk,
                      length);
     }
@@ -137,9 +135,9 @@ void cpu_merge_sort(float *h_unsorted_array, float *h_sorted_array,
   }
 }
 
-void check_sorted_array(float *sorted_array, unsigned long long length) {
+void check_sorted_array(float *sorted_array, uint64_t length) {
   bool isCorrect = true;
-  unsigned long long i = 0;
+  uint64_t i = 0;
   while (isCorrect && i < length - 1) {
     isCorrect = sorted_array[i] <= sorted_array[i + 1];
     i++;
@@ -155,13 +153,13 @@ int main() {
   // sofisticated memory management. Becuase this takes up all
   // the avaliable memory on the GPU (6GB).
   // Takes the GPU 2,283 ms and the CPU 323,186 ms.
-  // unsigned long long length = 1610612736 / 2;
+  // uint64_t length = 1610612736 / 2;
 
   // A quicker experiment.
   // Takes the GPU 2,161 ms and the CPU 15,630 ms.
-  unsigned long long length = 10000000 * 5;
+  uint64_t length = 10000000 * 5;
 
-  unsigned long long size = length * sizeof(float);
+  uint64_t size = length * sizeof(float);
 
   cudaError_t cudaStatus;
   curandStatus_t curandStatus;
