@@ -150,9 +150,16 @@ void checkSortedArray(float *sorted_array, unsigned long long length) {
 // TODO(domenicd): implement a third version in OpenMP and run on Chapman
 // numa server to compare CUDA and OpenMP.
 int main() {
-  // unsigned long long length = 1610612736/2;
-  unsigned long long length =
-      10000000 * 20; // CPU takes 15 seconds at this length
+  // This is the largest we can do without having to do more
+  // sofisticated memory management. Becuase this takes up all
+  // the avaliable memory on the GPU (6GB).
+  // Takes the GPU 2,283 ms and the CPU 323,186 ms.
+  unsigned long long length = 1610612736 / 2;
+
+  // A quicker experiment.
+  // Takes the GPU 2,161 ms and the CPU 15,630 ms.
+  // unsigned long long length = 10000000 * 5;
+
   unsigned long long size = length * sizeof(float);
 
   cudaError_t cudaStatus;
@@ -200,6 +207,5 @@ int main() {
   delete[] h_sorted_array;
   delete[] h_unsorted_array;
 
-  getchar();
   return 0;
 }
