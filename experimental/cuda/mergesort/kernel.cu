@@ -9,6 +9,7 @@
 #include <math.h>
 #include <sstream>
 #include <stdio.h>
+#include <omp.h>
 
 using namespace std;
 
@@ -118,12 +119,14 @@ void cpu_merge_sort(float *h_unsorted_array, float *h_sorted_array,
   }
 }
 
+
 void cpu_merge_sort(float *h_unsorted_array, float *h_sorted_array,
                     uint64_t length) {
   uint64_t chunk = 2;
   bool isSorted = false;
   while (!isSorted) {
     uint64_t threads = ceilf(length / float(chunk));
+	#pragma omp parallel for
     for (uint64_t i = 0; i < threads; i++) {
       cpu_merge_sort(h_unsorted_array, h_sorted_array, i * chunk, chunk,
                      length);
