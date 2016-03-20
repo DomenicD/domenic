@@ -93,7 +93,7 @@ void cuda_merge_sort(float *d_unsorted_array, float *d_sorted_array,
   }
 }
 
-void cpu_merge_sort(float *h_unsorted_array, float *h_sorted_array,
+void omp_merge_sort(float *h_unsorted_array, float *h_sorted_array,
                     uint64_t start, uint64_t chunk, uint64_t length) {
   uint64_t middle = min(start + chunk / 2, length);
   uint64_t end = min(start + chunk, length);
@@ -120,7 +120,7 @@ void cpu_merge_sort(float *h_unsorted_array, float *h_sorted_array,
 }
 
 
-void cpu_merge_sort(float *h_unsorted_array, float *h_sorted_array,
+void omp_merge_sort(float *h_unsorted_array, float *h_sorted_array,
                     uint64_t length) {
   uint64_t chunk = 2;
   bool isSorted = false;
@@ -128,7 +128,7 @@ void cpu_merge_sort(float *h_unsorted_array, float *h_sorted_array,
     uint64_t threads = ceilf(length / float(chunk));
 	#pragma omp parallel for
     for (uint64_t i = 0; i < threads; i++) {
-      cpu_merge_sort(h_unsorted_array, h_sorted_array, i * chunk, chunk,
+      omp_merge_sort(h_unsorted_array, h_sorted_array, i * chunk, chunk,
                      length);
     }
     if (chunk >= length) {
@@ -201,7 +201,7 @@ int main() {
   // Reallocate h_sorted_array and perform sorting on CPU
   h_sorted_array = new float[length];
   start_timer("CPU sorting");
-  cpu_merge_sort(h_unsorted_array, h_sorted_array, length);
+  omp_merge_sort(h_unsorted_array, h_sorted_array, length);
   stop_timer();
   check_sorted_array(h_sorted_array, length);
 

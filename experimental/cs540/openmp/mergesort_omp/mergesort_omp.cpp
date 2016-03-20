@@ -9,19 +9,51 @@
 #include <stdio.h>
 #include <string>
 
-void benchmark(std::string label, std::function<void(void)> lambda) {
+void print_thread_count() {
+#pragma omp parallel
+  {
+    if (omp_get_thread_num() == 0) {
+      std::cout << "Using " << omp_get_num_threads() << " threads" << std::endl;
+    }
+  }
+}
+
+void benchmark(std::string label, std::function<void(void)> lambda,
+               int samples) {
   // Source: http://en.cppreference.com/w/cpp/chrono/c/clock
-  auto wall_clock_start = std::chrono::high_resolution_clock::now();
-  auto cpu_clock_start = std::clock();
-  lambda();
-  auto wall_clock_end = std::chrono::high_resolution_clock::now();
-  auto cpu_clock_end = std::clock();
-  auto wall_diff =
-      std::chrono::duration<double>(wall_clock_end - wall_clock_start).count();
-  auto cpu_diff = (cpu_clock_end - cpu_clock_start) / (double)CLOCKS_PER_SEC;
-  std::cout << label << " wall time: " << wall_diff << " sec" << std::endl;
-  std::cout << label << " cpu  time: " << cpu_diff << " sec" << std::endl
+  double wall_time = 0.0;
+  double cpu_time = 0.0;
+  for (size_t i = 0; i < samples; i++) {
+    auto wall_clock_start = std::chrono::high_resolution_clock::now();
+    auto cpu_clock_start = std::clock();
+    lambda();
+    auto wall_clock_end = std::chrono::high_resolution_clock::now();
+    auto cpu_clock_end = std::clock();
+    wall_time +=
+        (std::chrono::duration<double>(wall_clock_end - wall_clock_start)
+             .count()) /
+        samples;
+    cpu_time +=
+        ((cpu_clock_end - cpu_clock_start) / (double)CLOCKS_PER_SEC) / samples;
+  }
+
+  std::cout << label << " samples: " << samples << std::endl;
+  std::cout << label << " avg wall time: " << wall_time << " sec" << std::endl;
+  std::cout << label << " avg cpu  time: " << cpu_time << " sec" << std::endl
             << std::endl;
+}
+
+void benchmark(std::string label, std::function<void(void)> lambda) {
+  benchmark(label, lambda, 1);
+}
+
+void benchmark(std::string label, std::function<void(void)> lambda,
+               std::vector<int> processors, int samples) {
+  for (int i : processors) {
+    omp_set_num_threads(i);
+    print_thread_count();
+    benchmark(label, lambda, samples);
+  }
 }
 
 void print_array(float *arr, const int64_t length) {
@@ -35,7 +67,7 @@ void print_array(float *arr, const int64_t length) {
   std::cout << str << " ]" << std::endl;
 }
 
-void cpu_merge_sort(float *arr, float *buffer, int64_t start, int64_t chunk,
+void omp_merge_sort(float *arr, float *buffer, int64_t start, int64_t chunk,
                     int64_t length) {
   int64_t middle = std::min(start + chunk / 2, length);
   int64_t end = std::min(start + chunk, length);
@@ -58,23 +90,14 @@ void cpu_merge_sort(float *arr, float *buffer, int64_t start, int64_t chunk,
   }
 }
 
-void print_thread_count() {
-#pragma omp parallel
-  {
-    if (omp_get_thread_num() == 0) {
-      std::cout << "Using " << omp_get_num_threads() << " threads" << std::endl;
-    }
-  }
-}
-
-void cpu_merge_sort(float *arr, float *buffer, int64_t length) {
+void omp_merge_sort(float *arr, float *buffer, int64_t length) {
   int64_t chunk = 2;
   bool isSorted = false;
   while (!isSorted) {
     int64_t threads = static_cast<int64_t>(ceilf(length / float(chunk)));
 #pragma omp parallel for
     for (int64_t i = 0; i < threads; i++) {
-      cpu_merge_sort(arr, buffer, i * chunk, chunk, length);
+      omp_merge_sort(arr, buffer, i * chunk, chunk, length);
     }
     if (chunk >= length) {
       isSorted = true;
@@ -99,28 +122,32 @@ void fill_with_random_numbers(float *arr, int64_t length) {
 }
 
 int main(int argc, char *argv[]) {
-  // With 1 thread: 89,500 ms.
-  // With 8 threads: 23,212 ms.
-  int64_t length = 10000000 * 5;
+  int64_t length = 10000000;
 
-  float *arr = new float[length];
-  float *buffer = new float[length];
-
-  // omp_set_num_threads(1);
+  float *random_numbers = new float[length];
 
   std::cout << "Starting random number generation" << std::endl;
-  benchmark("Random generation", [length, &arr]() {
-    print_thread_count();
-    fill_with_random_numbers(arr, length);
+  print_thread_count();
+  benchmark("Random generation", [length, &random_numbers]() {
+    fill_with_random_numbers(random_numbers, length);
   });
+
+  float *array_to_sort = new float[length];
+  float *buffer = new float[length];
+
+  auto merge_sort_operation = [length, &random_numbers, &array_to_sort,
+                               &buffer]() {
+    // Reset the array back to the inital set of random numbers before each run.
+    std::copy(random_numbers, random_numbers + length, array_to_sort);
+    // Sort the random numbers using merge sort.
+    omp_merge_sort(array_to_sort, buffer, length);
+  };
 
   std::cout << "Starting merge sort" << std::endl;
-  benchmark("Merge sort", [length, &arr, &buffer]() {
-    print_thread_count();
-    cpu_merge_sort(arr, buffer, length);
-  });
+  benchmark("Merge sort", merge_sort_operation, {1, 2, 4, 8}, 10);
 
-  delete[] arr;
+  delete[] random_numbers;
+  delete[] array_to_sort;
   delete[] buffer;
   return 0;
 }
