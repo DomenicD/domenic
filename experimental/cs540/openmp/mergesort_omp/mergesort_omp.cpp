@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <chrono>
+#include <ctime>
 #include <functional>
 #include <iostream>
 #include <omp.h>
@@ -7,20 +8,20 @@
 #include <sstream>
 #include <stdio.h>
 #include <string>
-#include <ctime>
 
 void benchmark(std::string label, std::function<void(void)> lambda) {
-	// Source: http://en.cppreference.com/w/cpp/chrono/c/clock
-	auto wall_clock_start = std::chrono::high_resolution_clock::now();
-	auto cpu_clock_start = std::clock();
+  // Source: http://en.cppreference.com/w/cpp/chrono/c/clock
+  auto wall_clock_start = std::chrono::high_resolution_clock::now();
+  auto cpu_clock_start = std::clock();
   lambda();
   auto wall_clock_end = std::chrono::high_resolution_clock::now();
   auto cpu_clock_end = std::clock();
   auto wall_diff =
       std::chrono::duration<double>(wall_clock_end - wall_clock_start).count();
-  auto cpu_diff = (cpu_clock_end - cpu_clock_start) / (double)CLOCKS_PER_SEC;  
+  auto cpu_diff = (cpu_clock_end - cpu_clock_start) / (double)CLOCKS_PER_SEC;
   std::cout << label << " wall time: " << wall_diff << " sec" << std::endl;
-  std::cout << label << " cpu  time: " << cpu_diff << " sec" << std::endl << std::endl;
+  std::cout << label << " cpu  time: " << cpu_diff << " sec" << std::endl
+            << std::endl;
 }
 
 void print_array(float *arr, const int64_t length) {
@@ -105,7 +106,7 @@ int main(int argc, char *argv[]) {
   float *arr = new float[length];
   float *buffer = new float[length];
 
-  //omp_set_num_threads(1);
+  // omp_set_num_threads(1);
 
   std::cout << "Starting random number generation" << std::endl;
   benchmark("Random generation", [length, &arr]() {
