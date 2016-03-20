@@ -7,14 +7,20 @@
 #include <sstream>
 #include <stdio.h>
 #include <string>
+#include <ctime>
 
 void benchmark(std::string label, std::function<void(void)> lambda) {
-  auto start_time = std::chrono::steady_clock::now();
+	// Source: http://en.cppreference.com/w/cpp/chrono/c/clock
+	auto wall_clock_start = std::chrono::high_resolution_clock::now();
+	auto cpu_clock_start = std::clock();
   lambda();
-  auto end = std::chrono::steady_clock::now();
-  auto diff =
-      std::chrono::duration<double, std::milli>(end - start_time).count();
-  std::cout << label << " took " << diff << " ms" << std::endl << std::endl;
+  auto wall_clock_end = std::chrono::high_resolution_clock::now();
+  auto cpu_clock_end = std::clock();
+  auto wall_diff =
+      std::chrono::duration<double>(wall_clock_end - wall_clock_start).count();
+  auto cpu_diff = (cpu_clock_end - cpu_clock_start) / (double)CLOCKS_PER_SEC;  
+  std::cout << label << " wall time: " << wall_diff << " sec" << std::endl;
+  std::cout << label << " cpu  time: " << cpu_diff << " sec" << std::endl << std::endl;
 }
 
 void print_array(float *arr, const int64_t length) {
@@ -94,12 +100,12 @@ void fill_with_random_numbers(float *arr, int64_t length) {
 int main(int argc, char *argv[]) {
   // With 1 thread: 89,500 ms.
   // With 8 threads: 23,212 ms.
-  int64_t length = 10000000 * 10;
+  int64_t length = 10000000 * 5;
 
   float *arr = new float[length];
   float *buffer = new float[length];
 
-  omp_set_num_threads(1);
+  //omp_set_num_threads(1);
 
   std::cout << "Starting random number generation" << std::endl;
   benchmark("Random generation", [length, &arr]() {
