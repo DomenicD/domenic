@@ -9,9 +9,13 @@
 /bazel-out
 
 .idea/
+Release/
 Debug/
 x64/
 *.sdf
 *.sln
 *.suo
 *.opensdf
+*.opendb
+*.vcxproj*
+*.pdb
