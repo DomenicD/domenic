@@ -51,6 +51,7 @@ int main(int argc, char *argv[]) {
     if (rank == ROOT) {
       std::cout << "FAILURE EXIT" << std::endl;
     }
+    MPI_Finalize();
     exit(EXIT_FAILURE);
   }
 
@@ -97,6 +98,6 @@ int main(int argc, char *argv[]) {
   }
 
   delete[] local_numbers;
-
+  MPI_Finalize();
   return 0;
 }
