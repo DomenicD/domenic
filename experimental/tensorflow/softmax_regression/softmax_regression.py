@@ -8,4 +8,6 @@ b = tf.Variable(tf.zeros([10]))
 
 y = tf.nn.softmax(tf.matmul(x, W) + b)
 
-# TODO(domenic): Training (https://www.tensorflow.org/versions/r0.7/tutorials/mnist/beginners/index.html)
+y_ = tf.placeholder(tf.float32, [None, 10])
+
+cross_entropy = -tf.reduce_sum(y_*tf.log(y))

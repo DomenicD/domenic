@@ -9,18 +9,13 @@ const std::string SMALL_FILE_NAME = "random_numbers_small.txt";
 const int TARGET_INDICES_SEND = 1;
 const int ROOT = 0;
 
+// Uses c++11. Need to include flag -std=c++11 when compiling.
 int main(int argc, char *argv[]) {
   MPI_Init(&argc, &argv);
 
   int process_count, rank;
   MPI_Comm_size(MPI_COMM_WORLD, &process_count);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-  // This can be done elegently by using MPI_Scatter and MPI_Gather.
-  // Use this for reference:
-  // http://mpitutorial.com/tutorials/mpi-scatter-gather-and-allgather/
-  // Use modern c++ IO:
-  // http://www.cplusplus.com/doc/tutorial/files/
 
   int items_per_process = -1;
   int target_value = 0;
@@ -51,6 +46,7 @@ int main(int argc, char *argv[]) {
     if (rank == ROOT) {
       std::cout << "FAILURE EXIT" << std::endl;
     }
+    MPI_Finalize();
     exit(EXIT_FAILURE);
   }
 
@@ -97,6 +93,6 @@ int main(int argc, char *argv[]) {
   }
 
   delete[] local_numbers;
-
+  MPI_Finalize();
   return 0;
 }
