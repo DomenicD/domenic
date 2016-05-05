@@ -38,7 +38,13 @@ object CitationAtlas {
     val metadata = graph.vertices.mapValues((id, publication) =>
       getReferenceRanking(referenceMap, publication))
 
-    metadata.foreach(m => print(m))
+    metadata.collect().find(_._1 == 1).get._2.referenceRanks.foreach(rank => {
+      print(rank.id)
+      print(rank.citationCount)
+      print(rank.citationQuality)
+      print(rank.depth)
+      print("-------------")
+    })
   }
 
   def getReferenceRanking(refMap: Map[VertexId, Set[VertexId]],
