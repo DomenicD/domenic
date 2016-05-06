@@ -1,9 +1,8 @@
 package spark.citations
 
-import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.graphx._
 import org.apache.spark.rdd.RDD
-import org.apache.spark.storage.StorageLevel
+import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.collection.mutable
 
@@ -35,18 +34,10 @@ object CitationAtlas {
         // http://stackoverflow.com/questions/32900862/map-can-not-be-serializable-in-scala
         .map(identity)
 
-//    val metadata = graph.vertices.mapValues((id, publication) =>
-//      getReferenceRanking(referenceMap, publication))
-//
-//    metadata
-//      .persist(StorageLevel.MEMORY_AND_DISK)
-//      .take(1)
-//      .foreach(v => {
-//        println(v._2)
-//        println()
-//      })
-
-    println(getReferenceRanking(referenceMap, graph.vertices.first()._2))
+    graph.vertices.mapValues((id, publication) =>
+      getReferenceRanking(referenceMap, publication))
+      .values
+      .saveAsTextFile("file:///home/djdonato/git/domenic/java/src/spark/citations/output")
   }
 
   def getReferenceRanking(refMap: Map[VertexId, Set[VertexId]],
@@ -63,7 +54,6 @@ object CitationAtlas {
     val queue = new mutable.Queue[VertexId]()
         recordCitations(ranks, queue, rootId, refMap.get(rootId).get, maxDepth)
 
-    var i = 0
     while (queue.nonEmpty && depth <= maxDepth) {
       val currentId = queue.dequeue()
       if (!visited.contains(currentId)) {
@@ -71,9 +61,6 @@ object CitationAtlas {
         recordCitations(ranks, queue, currentId, refMap.get(currentId).get, maxDepth)
       }
       depth = ranks.get(currentId).get.depth
-
-      if (i % 10 == 0) println(rootId + ": " + i)
-      i += 1
     }
 
     // Compute the citationQuality by taking the average of the top n Publications that cite this
@@ -121,10 +108,12 @@ class CitationMetadata(val publication: Publication,
                        val referenceRanks: List[ReferenceRank]) extends Serializable {
   override def toString: String = {
     val sb: StringBuilder = new StringBuilder()
+    sb.append("window.data = window.data || {};")
+    sb.append("window.data['").append(publication.id).append("'] = ")
     sb.append("{\n")
     sb.append("id: ").append(publication.id).append(",\n")
     sb.append("ranks: [").append(referenceRanks.mkString(",\n")).append("]\n")
-    sb.append("}")
+    sb.append("};")
     sb.toString()
   }
 }
