@@ -34,9 +34,9 @@ object CitationAtlas {
         // http://stackoverflow.com/questions/32900862/map-can-not-be-serializable-in-scala
         .map(identity)
 
-    graph.vertices.mapValues((id, publication) =>
-      getReferenceRanking(referenceMap, publication))
-      .values
+    graph.vertices
+      .repartition(50) // This makes a HUGE difference!!!
+      .map((v) => getReferenceRanking(referenceMap, v._2))
       .saveAsTextFile("file:///home/djdonato/git/domenic/java/src/spark/citations/output")
   }
 
@@ -108,9 +108,8 @@ class CitationMetadata(val publication: Publication,
                        val referenceRanks: List[ReferenceRank]) extends Serializable {
   override def toString: String = {
     val sb: StringBuilder = new StringBuilder()
-    sb.append("window.data = window.data || {};")
-    sb.append("window.data['").append(publication.id).append("'] = ")
-    sb.append("{\n")
+    sb.append("window.data = window.data || {};\n")
+    sb.append("window.data['").append(publication.id).append("'] = ").append("{\n")
     sb.append("id: ").append(publication.id).append(",\n")
     sb.append("ranks: [").append(referenceRanks.mkString(",\n")).append("]\n")
     sb.append("};")
