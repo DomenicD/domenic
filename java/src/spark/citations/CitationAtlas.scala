@@ -3,6 +3,7 @@ package spark.citations
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.graphx._
 import org.apache.spark.rdd.RDD
+import org.apache.spark.storage.StorageLevel
 
 import scala.collection.mutable
 
@@ -12,11 +13,10 @@ object CitationAtlas {
     val sc = new SparkContext(conf)
 
     val citations: RDD[List[Long]] = sc.textFile(
-      "file:///home/djdonato/git/domenic/java/src/spark/citations/test_data.txt", 1)
+      "file:///home/djdonato/git/domenic/java/src/spark/citations/Cit-HepPh.txt", 1)
       .map(s => s.split("\\s"))
       .filter(strings => strings.length == 2)
       .map(strings => List(strings(0).toLong, strings(1).toLong))
-      .cache()
 
     val vertices: RDD[(Long, Publication)] = citations
       .flatMap(pair => pair)
@@ -25,7 +25,7 @@ object CitationAtlas {
 
     val edges: RDD[Edge[Boolean]] = citations.map(longs => new Edge(longs.head, longs(1), false))
 
-    val graph: Graph[Publication, Boolean] = Graph.apply(vertices, edges)
+    val graph: Graph[Publication, Boolean] = Graph.apply(vertices, edges).cache()
 
     val referenceMap: Map[VertexId, Set[VertexId]] =
       graph.collectNeighborIds(EdgeDirection.Out).collect()
@@ -35,39 +35,45 @@ object CitationAtlas {
         // http://stackoverflow.com/questions/32900862/map-can-not-be-serializable-in-scala
         .map(identity)
 
-    val metadata = graph.vertices.mapValues((id, publication) =>
-      getReferenceRanking(referenceMap, publication))
+//    val metadata = graph.vertices.mapValues((id, publication) =>
+//      getReferenceRanking(referenceMap, publication))
+//
+//    metadata
+//      .persist(StorageLevel.MEMORY_AND_DISK)
+//      .take(1)
+//      .foreach(v => {
+//        println(v._2)
+//        println()
+//      })
 
-    metadata.collect().find(_._1 == 1).get._2.referenceRanks.foreach(rank => {
-      print(rank.id)
-      print(rank.citationCount)
-      print(rank.citationQuality)
-      print(rank.depth)
-      print("-------------")
-    })
+    println(getReferenceRanking(referenceMap, graph.vertices.first()._2))
   }
 
   def getReferenceRanking(refMap: Map[VertexId, Set[VertexId]],
                           publication: Publication): CitationMetadata = {
+    val maxDepth = 2
+    var depth = 1
+
     val rootId = publication.id
     val ranks = new mutable.HashMap[VertexId, ReferenceRank]()
     ranks.put(rootId, new ReferenceRank(rootId, 0))
 
     val visited = new mutable.HashSet[VertexId]()
     visited.add(rootId)
-
     val queue = new mutable.Queue[VertexId]()
-    val maxDepth = 10
-    var depth = 1
-    recordCitations(ranks, queue, depth, rootId, refMap.get(rootId).get)
-    
-    while (queue.nonEmpty && depth < maxDepth) {
+        recordCitations(ranks, queue, rootId, refMap.get(rootId).get, maxDepth)
+
+    var i = 0
+    while (queue.nonEmpty && depth <= maxDepth) {
       val currentId = queue.dequeue()
       if (!visited.contains(currentId)) {
-        recordCitations(ranks, queue, depth, currentId, refMap.get(currentId).get)
         visited.add(currentId)
-        depth += 1
+        recordCitations(ranks, queue, currentId, refMap.get(currentId).get, maxDepth)
       }
+      depth = ranks.get(currentId).get.depth
+
+      if (i % 10 == 0) println(rootId + ": " + i)
+      i += 1
     }
 
     // Compute the citationQuality by taking the average of the top n Publications that cite this
@@ -89,17 +95,22 @@ object CitationAtlas {
 
   def recordCitations(ranks: mutable.HashMap[VertexId, ReferenceRank],
                       queue: mutable.Queue[VertexId],
-                      depth: Long,
                       parentId: VertexId,
-                      childrenIds: Set[VertexId]): Unit = {
+                      childrenIds: Set[VertexId],
+                      maxDepth: Int): Unit = {
+    val depth = ranks.get(parentId).get.depth + 1
     childrenIds.foreach(id => {
-      if (!ranks.contains(id)) {
+      val hadRank: Boolean = ranks.contains(id)
+      val isDepthAllowed: Boolean = depth <= maxDepth
+      if (!hadRank && isDepthAllowed) {
         ranks.put(id, new ReferenceRank(id, depth))
       }
-      val rank = ranks.get(id)
-      rank.get.citationCount += 1
-      rank.get.citations.add(parentId)
-      queue.enqueue(id)
+      if (hadRank || isDepthAllowed) {
+        val rank = ranks.get(id)
+        rank.get.citationCount += 1
+        rank.get.citations.add(parentId)
+        queue.enqueue(id)
+      }
     })
   }
 }
@@ -107,10 +118,31 @@ object CitationAtlas {
 class Publication(val id: Long) extends Serializable { }
 
 class CitationMetadata(val publication: Publication,
-                       val referenceRanks: List[ReferenceRank]) extends Serializable { }
+                       val referenceRanks: List[ReferenceRank]) extends Serializable {
+  override def toString: String = {
+    val sb: StringBuilder = new StringBuilder()
+    sb.append("{\n")
+    sb.append("id: ").append(publication.id).append(",\n")
+    sb.append("ranks: [").append(referenceRanks.mkString(",\n")).append("]\n")
+    sb.append("}")
+    sb.toString()
+  }
+}
 
-class ReferenceRank(val id: VertexId, val depth: Long) extends Serializable {
+class ReferenceRank(val id: VertexId, val depth: Int) extends Serializable {
   var citationCount: Long = 0
   var citationQuality: Double = 0.0
   val citations: mutable.Set[VertexId] = new mutable.HashSet[VertexId]()
+
+  override def toString: String = {
+    val sb: StringBuilder = new StringBuilder()
+    sb.append("{\n")
+    sb.append("id: ").append(id).append(",\n")
+    sb.append("count: ").append(citationCount).append(",\n")
+    sb.append("quality: ").append(citationQuality).append(",\n")
+    sb.append("depth: ").append(depth).append(",\n")
+    sb.append("citations: [").append(citations.mkString(", ")).append("]\n")
+    sb.append("}")
+    sb.toString()
+  }
 }
