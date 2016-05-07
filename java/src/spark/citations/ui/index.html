@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="citationAtlas">
+<head>
+    <meta charset="UTF-8">
+    <title>Citation Atlas</title>
+
+    <link rel="stylesheet"
+          href="https://cdn.gitcdn.link/cdn/angular/bower-material/v1.0.7/angular-material.css">
+
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+          rel="stylesheet">
+
+    <link href="styles.css" rel="stylesheet">
+</head>
+<body>
+<div layout="column" layout-fill>
+
+    <md-toolbar>
+        <div class="md-toolbar-tools">
+            <h2>
+                <span>Citation Atlas</span>
+            </h2>
+            <span flex></span>
+            <md-button class="md-icon-button"
+                       aria-label="Code"
+                       ng-href="https://github.com/DomenicD/domenic/tree/master/java/src/spark/citations"
+                       target="_blank">
+                <md-icon>
+                    <i class="material-icons">code</i>
+                </md-icon>
+            </md-button>
+        </div>
+    </md-toolbar>
+
+    <md-content ng-controller="citationController as ctrl" layout="row">
+        <md-sidenav class="md-sidenav-left" md-is-locked-open="true">
+            <md-content>
+                <md-list>
+                    <md-subheader>Citations</md-subheader>
+                    <md-list-item ng-repeat="id in ctrl.citationIds"
+                                  ng-click="ctrl.citationId = id">
+                            {{id}}
+                    </md-list-item>
+                </md-list>
+            </md-content>
+        </md-sidenav>
+        <div id="d3-content">
+
+        </div>
+    </md-content>
+</div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js"></script>
+
+<!-- Angular Material requires Angular.js Libraries -->
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-animate.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-route.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-aria.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-messages.min.js"></script>
+
+<!-- Angular Material Library -->
+<script src="https://cdn.gitcdn.link/cdn/angular/bower-material/v1.0.7/angular-material.js"></script>
+
+<!-- Citation data -->
+<script src="citations-output-data.js"></script>
+
+<!-- App -->
+<script src="bin/app.js"></script>
+
+</body>
+</html>

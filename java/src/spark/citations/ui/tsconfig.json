@@ -1,0 +1,11 @@
+{
+  "compileOnSave": true,
+  "compilerOptions": {
+    "module": "es6",
+    "noImplicitAny": true,
+    "removeComments": true,
+    "outFile": "./bin/app.js",
+    "sourceMap": true,
+    "target": "es5"
+  }
+}

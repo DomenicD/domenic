@@ -8,11 +8,19 @@ import scala.collection.mutable
 
 object CitationAtlas {
   def main(args: Array[String]): Unit = {
+    if (args.length != 3) {
+      throw new IllegalArgumentException(
+        "CitationAtlas requires 3 args: inputPath, outputPath, and partitions")
+    }
+
+    val inputPath = args(0)
+    val outputPath = args(1)
+    val partitions = args(2).toInt
+
     val conf = new SparkConf().setAppName("Citation Atlas")
     val sc = new SparkContext(conf)
 
-    val citations: RDD[List[Long]] = sc.textFile(
-      "file:///home/djdonato/git/domenic/java/src/spark/citations/Cit-HepPh.txt", 1)
+    val citations: RDD[List[Long]] = sc.textFile(inputPath, 1)
       .map(s => s.split("\\s"))
       .filter(strings => strings.length == 2)
       .map(strings => List(strings(0).toLong, strings(1).toLong))
@@ -35,9 +43,9 @@ object CitationAtlas {
         .map(identity)
 
     graph.vertices
-      .repartition(50) // This makes a HUGE difference!!!
+      .repartition(partitions) // This makes a HUGE difference!!!
       .map((v) => getReferenceRanking(referenceMap, v._2))
-      .saveAsTextFile("file:///home/djdonato/git/domenic/java/src/spark/citations/output")
+      .saveAsTextFile(outputPath)
   }
 
   def getReferenceRanking(refMap: Map[VertexId, Set[VertexId]],
