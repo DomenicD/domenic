@@ -51,7 +51,7 @@ class CitationController {
         if (value != this.citationId) {
             this._citationId = value;
             this.citation = this.citations[this.citationId];
-            this.updateGraph();
+            this.createForceGraph();
         }
     }
 
@@ -65,7 +65,8 @@ class CitationController {
         .attr("cy", function(d) { return d.y; });
     }
 
-    updateGraph() {
+    // TODO(domenicd): Use focus point so pull the depths apart.
+    createForceGraph() {
         let nodeMap: {[key: number]: CitationNode} = {};
         nodeMap[this.citation.id] = CitationNode.emptyNode(this.citation.id);
         let maxCount = 0;
@@ -138,8 +139,9 @@ class CitationNode {
     count: number;
     quality: number;
     depth: number;
-    
-    r: number;
+
+    parent: CitationNode = null;
+    children: CitationNode[];
 
     constructor(rank: CitationRank) {
         this.id = rank.id;
