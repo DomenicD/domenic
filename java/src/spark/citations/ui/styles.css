@@ -9,3 +9,7 @@
   stroke: #000;
   stroke-width: 1.5px;
 }
+
+.selected {
+  background-color: #b5d8ff;
+}

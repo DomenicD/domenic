@@ -38,13 +38,14 @@
                 <md-list>
                     <md-subheader>Citations</md-subheader>
                     <md-list-item ng-repeat="id in ctrl.citationIds"
-                                  ng-click="ctrl.citationId = id">
+                                  ng-click="ctrl.citationId = id"
+                                  ng-class="{selected: ctrl.citationId == id}">
                             {{id}}
                     </md-list-item>
                 </md-list>
             </md-content>
         </md-sidenav>
-        <div id="d3-content">
+        <div id="d3-content" flex="grow" layout="row" layout-align="center">
 
         </div>
     </md-content>
