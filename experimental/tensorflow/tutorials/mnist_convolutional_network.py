@@ -1,5 +1,9 @@
+import gzip
+import numpy
+import pickle
+import sys
+
 import tensorflow as tf
-import gzip, pickle, numpy
 
 with gzip.open("/home/djdonato/Downloads/mnist.pkl.gz", "rb") as f:
     train_set, valid_set, test_set = pickle.load(f, encoding='latin1')
@@ -48,8 +52,22 @@ def max_pool_2x2(x):
     return tf.nn.max_pool(x, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding="SAME")
 
 
+def variable_summaries(var, name):
+    with tf.name_scope("summaries"):
+        mean = tf.reduce_mean(var)
+        tf.scalar_summary('mean/' + name, mean)
+        with tf.name_scope('stddev'):
+            stddev = tf.sqrt(tf.reduce_sum(tf.square(var - mean)))
+        tf.scalar_summary('sttdev/' + name, stddev)
+        tf.scalar_summary('max/' + name, tf.reduce_max(var))
+        tf.scalar_summary('min/' + name, tf.reduce_min(var))
+        tf.histogram_summary(name, var)
+
 x = tf.placeholder(tf.float32, [None, 784])
 y_ = tf.placeholder(tf.float32, [None, 10])
+
+# TODO(domenic): visualize graph to understand how this modifies the computation graph.
+# https://www.tensorflow.org/versions/r0.8/how_tos/summaries_and_tensorboard/index.html
 
 # First convolutional layer
 W_conv1 = weight_variable([5, 5, 1, 32])
@@ -88,7 +106,6 @@ y_conv = tf.nn.softmax(tf.matmul(h_fc1_drop, W_fc2) + b_fc2)
 
 # Train the network
 cross_entropy = tf.reduce_mean(-tf.reduce_sum(y_ * tf.log(y_conv), reduction_indices=[1]))
-# TODO(domenic): visualize graph to understand how this modifies the computation graph.
 train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)
 correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
@@ -99,16 +116,19 @@ sess.run(init)
 
 train_size = len(train_x)
 
-for i in range(20000):
+print("Starting to train")
+sys.stdout.flush()
+for i in range(2000):
     # Shuffle the data
     sample_indices = numpy.arange(train_size)
     numpy.random.shuffle(sample_indices)
     sample_indices = sample_indices[:50]
 
-    if i%100 == 0:
+    if i % 100 == 0:
         train_accuracy = sess.run(accuracy, feed_dict={
             x: train_x[sample_indices], y_: train_y[sample_indices], keep_prob: 1.0})
-        print("step %d, training accuracy %g"%(i, train_accuracy))
+        print("step %d, training accuracy %g" % (i, train_accuracy))
+        sys.stdout.flush()
 
     sess.run(train_step,
              feed_dict={x: train_x[sample_indices], y_: train_y[sample_indices], keep_prob: 0.5})
