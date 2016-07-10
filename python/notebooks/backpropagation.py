@@ -68,7 +68,7 @@ class Cost:
         if same_type(float, actual, expected):
             return self._apply(actual, expected)
         elif same_size(actual, expected):
-            return np.array([self._apply(pair[0], pair[1]) for pair in zip(actual, expected)])
+            return np.array([self._apply(a, e) for a, e in zip(actual, expected)])
         else:
             raise ValueError("Value must be a float or list of floats.")
 
@@ -80,7 +80,7 @@ class Cost:
         if same_type(float, actual, expected):
             return self._apply_derivative(actual, expected)
         elif same_size(actual, expected):
-            return np.array([self._apply_derivative(pair[0], pair[1]) for pair in zip(actual, expected)])
+            return np.array([self._apply_derivative(a, e) for a, e in zip(actual, expected)])
         else:
             raise ValueError("Value must be a float or list of floats.")
 
@@ -98,16 +98,15 @@ class WeightGenerator:
 
 
 class RectifiedLinearUnit(Activation):
-    def __init__(self, threshold: float = 0, leak: float = 0):
+    def __init__(self, leak: float = 0):
         super().__init__()
-        self.threshold = threshold
         self.leak = leak
 
     def _apply(self, value: float):
-        return max(0, value)
+        return max(self.leak * value, value)
 
     def _apply_derivative(self, value: float):
-        return value if value > self.threshold else self.leak
+        return 1 if value > 0 else self.leak
 
 
 class QuadraticCost(Cost):
@@ -148,10 +147,14 @@ def new_line():
     print("\n")
 
 
-def pretty_print(title: str, seq: Sequence[Sequence[Any]]):
+def pretty_print(title: str, seq: Union[Sequence[Any], Sequence[Sequence[Any]]]):
     print(title)
-    for l in seq:
-        print(np.matrix(l))
+    if len(seq) > 0 and same_size(seq[0]):
+        for l in seq:
+            print(np.matrix(l))
+            print("~~~~~~~~~~~~")
+    else:
+        print(np.matrix(seq))
         print("~~~~~~~~~~~~")
     new_line()
 
@@ -176,38 +179,47 @@ class FeedForward:
         self.biases = [np.zeros(n) for n in self.layers[1:]]
         self.inputs = [np.zeros(n) for n in self.layers]
         self.outputs = [np.zeros(n) for n in self.layers]
-        self.weight_errors = [np.zeros(n) for n in self.layers]
-        self.bias_errors = [np.zeros(n) for n in self.layers[1:]]
-        self.weight_gradients = [np.zeros(n) for n in self.layers]
+        self.node_errors = [np.zeros(n) for n in self.layers]
+        self.weight_gradients = [np.zeros(n) for n in self.layers[:-1]]
         self.bias_gradients = [np.zeros(n) for n in self.layers[1:]]
         self.total_error = 0
 
     def _generate_weights(self) -> Sequence[Sequence[float]]:
-        return [self.weight_generator(self.layers[i], self.layers[i + 1]) for i in
-                range(len(self.layers) - 1)]
+        return np.array([self.weight_generator(self.layers[i], self.layers[i + 1]) for i in
+                         range(len(self.layers) - 1)])
 
     def forward_pass(self, inputs: Sequence[float]):
         self.inputs[0] = inputs
         self.outputs[0] = inputs
         for i in range(1, len(self.layers)):
-            self.inputs[i] = np.dot(self.outputs[i - 1], self.weights[i - 1]) + self.biases[i - 1]
+            self.inputs[i] = np.matmul(self.outputs[i - 1], self.weights[i - 1]) + self.biases[
+                i - 1]
             self.outputs[i] = self.activation.apply(self.inputs[i])
 
     def backward_pass(self, expected: Sequence[float]):
         final_output = self.outputs[-1]
         self.total_error = sum(self.cost.apply(final_output, expected))
-        self.weight_errors[-1] = self.cost.apply_derivative(
+        self.node_errors[-1] = self.cost.apply_derivative(
             final_output, expected) * self.activation.apply_derivative(self.inputs[-1])
 
         for i in reversed(range(len(self.weights))):
-            print(i)
-            # TODO(domenic): There are some indexing issues here.
-            weighted_errors = np.dot(np.transpose(self.weights[i + 1]), self.weight_errors[i + 1])
+            weighted_errors = np.matmul(self.node_errors[i + 1], np.transpose(self.weights[i]))
             rate_of_change = self.activation.apply_derivative(self.inputs[i])
-            self.weight_errors[i] = weighted_errors * rate_of_change
-            self.bias_errors[i] = weighted_errors
-            self.weight_gradients[i] = self.outputs[i - 1] * self.weight_errors[i]
-            self.bias_gradients[i] = self.weight_errors[i]
+            self.node_errors[i] = weighted_errors * rate_of_change
+            self.weight_gradients[i] = self.outputs[i] * self.node_errors[i]
+            self.bias_gradients[i] = self.node_errors[i + 1]
+
+    def adjust_weights(self, learn_rate: float = .01):
+        for i in range(len(self.weights)):
+            self.weights[i] -= learn_rate * np.transpose(np.matrix(self.weight_gradients[i]))
+
+    def adjust_biases(self, learn_rate: float = .01):
+        for i in range(len(self.biases)):
+            self.biases[i] -= learn_rate * self.bias_gradients[i]
+
+    def adjust_parameters(self, learn_rate: float = .01):
+        self.adjust_weights(learn_rate)
+        self.adjust_biases(learn_rate)
 
     def print_state(self):
         self.print_weights()
@@ -215,7 +227,6 @@ class FeedForward:
         self.print_inputs()
         self.print_outputs()
         self.print_weight_errors()
-        self.print_bias_errors()
         self.print_weight_gradients()
         self.print_bias_gradients()
 
@@ -232,10 +243,7 @@ class FeedForward:
         pretty_print("outputs", self.outputs)
 
     def print_weight_errors(self):
-        pretty_print("weight_errors", self.weight_errors)
-
-    def print_bias_errors(self):
-        pretty_print("bias_errors", self.bias_errors)
+        pretty_print("weight_errors", self.node_errors)
 
     def print_weight_gradients(self):
         pretty_print("weight_gradients", self.weight_gradients)
