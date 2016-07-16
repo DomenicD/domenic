@@ -1,0 +1,60 @@
+<html lang="en" app="insight" >
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Angular Material style sheet -->
+  <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/angular_material/1.1.0-rc2/angular-material.min.css">
+
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body ng-cloak>
+  <div layout="column" layout-fill>
+
+    <md-toolbar>
+        <div class="md-toolbar-tools">
+            <h2>
+                <span>Insight</span>
+            </h2>
+            <span flex></span>
+            <md-button class="md-icon-button"
+                       aria-label="GitHub"
+                       ng-href="https://github.com/DomenicD/domenic/"
+                       target="_blank">
+                <md-icon>
+                    <i class="material-icons">code</i>
+                </md-icon>
+            </md-button>
+        </div>
+    </md-toolbar>
+
+    <md-content ng-controller="insightController as ctrl" layout="row">
+        <md-sidenav class="md-sidenav-left" md-is-locked-open="true">
+            <md-content>
+                <md-button ng-click="ctrl.getFeedForward()">
+                    Click
+                </md-button>
+            </md-content>
+        </md-sidenav>
+
+        <div id="d3-content" flex="grow" layout="row" layout-align="center">
+            <pre>
+                {{ctrl.feedForward}}
+            </pre>
+        </div>
+    </md-content>
+</div>
+
+  <script src="https://d3js.org/d3.v4.js"></script>
+
+  <!-- Angular Material requires Angular.js Libraries -->
+  <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular.js"></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-animate.js"></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-aria.js"></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-messages.js"></script>
+
+  <!-- Angular Material Library -->
+  <script src="http://ajax.googleapis.com/ajax/libs/angular_material/1.1.0-rc2/angular-material.js"></script>
+
+  <script src="app.js"></script>
+
+</body>
+</html>
