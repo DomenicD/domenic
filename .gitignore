@@ -19,7 +19,6 @@
 *.user
 *.iml
 .editorconfig
-.gitignore
 README.md
 angular-cli-build.js
 angular-cli.json
@@ -29,8 +28,10 @@ package.json
 public/
 src/
 tslint.json
-typings.json
 bin/app.js
 bin/app.js.map
 bower.json
 typings/
+npm-debug.log
+python/__pycache__/
+python/notebooks/__pycache__/
