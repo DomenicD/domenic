@@ -10,14 +10,11 @@ interface FeedForward {
   total_error: number;
 }
 
-
-function toNumbers(list: Array<number|string>): number[] {
-    return list.map((str: number|string) => Number(str));
-  }
-
-function toNumber(value: string|number): number {
-  return Number(value);
+function toNumbers(list: Array<number | string>): number[] {
+  return list.map((str: number | string) => Number(str));
 }
+
+function toNumber(value: string | number): number { return Number(value); }
 
 class FeedForwardDomain implements FeedForward {
   id: string;
@@ -34,33 +31,38 @@ class FeedForwardDomain implements FeedForward {
     this.updateState(ff);
   }
 
-  forwardPass(inputs: string[]|number[]): ng.IPromise<void> {
+  forwardPass(inputs: string[] | number[]): ng.IPromise<void> {
     return this.neuralNetworkApi
-        .updateFeedForward(this.id, FeedForwardCommandEnum.FORWARD_PASS, toNumbers(inputs))
+        .updateFeedForward(this.id, FeedForwardCommandEnum.FORWARD_PASS,
+                           toNumbers(inputs))
         .then(ff => this.updateState(ff));
   }
 
   backwardPass(expected: number[]): ng.IPromise<void> {
     return this.neuralNetworkApi
-        .updateFeedForward(this.id, FeedForwardCommandEnum.BACKWARD_PASS, toNumbers(expected))
+        .updateFeedForward(this.id, FeedForwardCommandEnum.BACKWARD_PASS,
+                           toNumbers(expected))
         .then(ff => this.updateState(ff));
   }
 
   adjustWeights(learningRate: number): ng.IPromise<void> {
     return this.neuralNetworkApi
-        .updateFeedForward(this.id, FeedForwardCommandEnum.ADJUST_WEIGHTS, toNumber(learningRate))
+        .updateFeedForward(this.id, FeedForwardCommandEnum.ADJUST_WEIGHTS,
+                           toNumber(learningRate))
         .then(ff => this.updateState(ff));
   }
 
   adjustBiases(learningRate: number): ng.IPromise<void> {
     return this.neuralNetworkApi
-        .updateFeedForward(this.id, FeedForwardCommandEnum.ADJUST_BIASES, toNumber(learningRate))
+        .updateFeedForward(this.id, FeedForwardCommandEnum.ADJUST_BIASES,
+                           toNumber(learningRate))
         .then(ff => this.updateState(ff));
   }
 
   adjustParameters(learningRate: number): ng.IPromise<void> {
     return this.neuralNetworkApi
-        .updateFeedForward(this.id, FeedForwardCommandEnum.ADJUST_PARAMETERS, toNumber(learningRate))
+        .updateFeedForward(this.id, FeedForwardCommandEnum.ADJUST_PARAMETERS,
+                           toNumber(learningRate))
         .then(ff => this.updateState(ff));
   }
 
@@ -92,10 +94,11 @@ class NeuralNetworkApi {
 
   constructor(private $http: ng.IHttpService) {}
 
-  createFeedForward(layers: string[]|number[]): ng.IPromise<FeedForwardDomain> {
+  createFeedForward(layers: string[] |
+                    number[]): ng.IPromise<FeedForwardDomain> {
     return this
-        .postRequestProcessing(
-            this.$http.post("/create_feedforward", {layers : toNumbers(layers)}))
+        .postRequestProcessing(this.$http.post("/create_feedforward",
+                                               {layers : toNumbers(layers)}))
         .then(ff => new FeedForwardDomain(this, ff));
   }
 
@@ -118,13 +121,11 @@ class NeuralNetworkApi {
 class InsightController {
   private feedForward: FeedForwardDomain;
 
-  constructor(private neuralNetworkApi: NeuralNetworkApi) {
-    
-  }
-  
+  constructor(private neuralNetworkApi: NeuralNetworkApi) {}
+
   createFeedForward(layers: string[]) {
-    this.neuralNetworkApi.createFeedForward(layers)
-        .then(ff => this.feedForward = ff);    
+    this.neuralNetworkApi.createFeedForward(layers).then(
+        ff => this.feedForward = ff);
   }
 }
 

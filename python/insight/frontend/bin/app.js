@@ -1,9 +1,7 @@
 function toNumbers(list) {
     return list.map(function (str) { return Number(str); });
 }
-function toNumber(value) {
-    return Number(value);
-}
+function toNumber(value) { return Number(value); }
 var FeedForwardDomain = (function () {
     function FeedForwardDomain(neuralNetworkApi, ff) {
         this.neuralNetworkApi = neuralNetworkApi;
@@ -92,8 +90,7 @@ var InsightController = (function () {
     }
     InsightController.prototype.createFeedForward = function (layers) {
         var _this = this;
-        this.neuralNetworkApi.createFeedForward(layers)
-            .then(function (ff) { return _this.feedForward = ff; });
+        this.neuralNetworkApi.createFeedForward(layers).then(function (ff) { return _this.feedForward = ff; });
     };
     return InsightController;
 }());

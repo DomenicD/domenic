@@ -12,6 +12,7 @@ def tolist(target: Any):
         return [tolist(item) for item in target]
     return target
 
+
 def same_size(*args: List[Sequence]):
     if len(args) == 0:
         return True
