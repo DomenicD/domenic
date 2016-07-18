@@ -1,13 +1,15 @@
-<html lang="en" app="insight" >
+<html lang="en" app="insight">
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Angular Material style sheet -->
-  <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/angular_material/1.1.0-rc2/angular-material.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Angular Material style sheet -->
+    <link rel="stylesheet"
+          href="http://ajax.googleapis.com/ajax/libs/angular_material/1.1.0-rc2/angular-material.min.css">
 
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="app.css" rel="stylesheet">
 </head>
 <body ng-cloak>
-  <div layout="column" layout-fill>
+<div layout="column" layout-fill>
 
     <md-toolbar>
         <div class="md-toolbar-tools">
@@ -29,32 +31,150 @@
     <md-content ng-controller="insightController as ctrl" layout="row">
         <md-sidenav class="md-sidenav-left" md-is-locked-open="true">
             <md-content>
-                <md-button ng-click="ctrl.getFeedForward()">
-                    Click
-                </md-button>
+                <div flex layout="row">
+                    <md-input-container class="md-block" flex-gt-sm>
+                        <label>Layers</label>
+                        <input ng-model="layers" ng-list>
+                    </md-input-container>
+                    <md-button ng-click="ctrl.createFeedForward(layers)">
+                        Create
+                    </md-button>
+                </div>
+
+                <div flex layout="row">
+                    <md-input-container class="md-block" flex-gt-sm>
+                        <label>Input</label>
+                        <input ng-model="inputs" ng-list>
+                    </md-input-container>
+                    <md-button ng-click="ctrl.feedForward.forwardPass(inputs)">
+                        Submit
+                    </md-button>
+                </div>
+
+                <div flex layout="row">
+                    <md-input-container class="md-block" flex-gt-sm>
+                        <label>Expected</label>
+                        <input ng-model="expected" ng-list>
+                    </md-input-container>
+                    <md-button ng-click="ctrl.feedForward.backwardPass(expected)">
+                        Submit
+                    </md-button>
+                </div>
+
+                <div flex layout="row">
+                    <md-input-container class="md-block" flex-gt-sm>
+                        <label>Learning rate</label>
+                        <input ng-model="rate" ng-list>
+                    </md-input-container>
+                    <md-button ng-click="ctrl.feedForward.adjustWeights(rate)">
+                        Weights
+                    </md-button>
+                    <md-button ng-click="ctrl.feedForward.adjustBiases(rate)">
+                        Biases
+                    </md-button>
+                </div>
             </md-content>
         </md-sidenav>
 
-        <div id="d3-content" flex="grow" layout="row" layout-align="center">
-            <pre>
-                {{ctrl.feedForward}}
-            </pre>
+        <div class="insight-content">
+
+            <div flex="grow" layout="row" layout-align="center">
+                <div class="param-list">
+                    <h2>Inputs</h2>
+                    <div class="param-list-item" ng-repeat="layer in ctrl.feedForward.inputs">
+                        <div class="item-label">Layer: {{$index}}</div>
+                        <table class="matrix">
+                            <tr ng-repeat="input in layer track by $index">
+                                <td>{{input.toFixed(3)}}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="param-list">
+                    <h2>Outputs</h2>
+                    <div class="param-list-item" ng-repeat="layer in ctrl.feedForward.outputs">
+                        <div class="item-label">Layer: {{$index}}</div>
+                        <table class="matrix">
+                            <tr ng-repeat="output in layer track by $index">
+                                <td>{{output.toFixed(3)}}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div flex="grow" layout="row" layout-align="center">
+                <div class="param-list">
+                    <h2>Weights</h2>
+                    <div class="param-list-item" ng-repeat="layer in ctrl.feedForward.weights">
+                        <div class="item-label">Layer: {{$index}}</div>
+                        <table class="matrix">
+                            <tr ng-repeat="row in layer">
+                                <td ng-repeat="weight in row track by $index">
+                                    {{weight.toFixed(3)}}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="param-list">
+                    <h2>Gradients</h2>
+                    <div class="param-list-item"
+                         ng-repeat="layer in ctrl.feedForward.weight_gradients">
+                        <div class="item-label">Layer: {{$index}}</div>
+                        <table class="matrix">
+                            <tr ng-repeat="gradient in layer track by $index">
+                                <td>{{gradient.toFixed(3)}}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div flex="grow" layout="row" layout-align="center">
+                <div class="param-list">
+                    <h2>Biases</h2>
+                    <div class="param-list-item" ng-repeat="layer in ctrl.feedForward.biases">
+                        <div class="item-label">Layer: {{$index}}</div>
+                        <table class="matrix">
+                            <tr ng-repeat="bias in layer track by $index">
+                                <td>{{bias.toFixed(3)}}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="param-list">
+                    <h2>Gradients</h2>
+                    <div class="param-list-item"
+                         ng-repeat="layer in ctrl.feedForward.bias_gradients">
+                        <div class="item-label">Layer: {{$index}}</div>
+                        <table class="matrix">
+                            <tr ng-repeat="gradient in layer track by $index">
+                                <td>{{gradient.toFixed(3)}}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
     </md-content>
 </div>
 
-  <script src="https://d3js.org/d3.v4.js"></script>
+<script src="https://d3js.org/d3.v4.js"></script>
 
-  <!-- Angular Material requires Angular.js Libraries -->
-  <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular.js"></script>
-  <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-animate.js"></script>
-  <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-aria.js"></script>
-  <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-messages.js"></script>
+<!-- Angular Material requires Angular.js Libraries -->
+<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-animate.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-aria.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-messages.js"></script>
 
-  <!-- Angular Material Library -->
-  <script src="http://ajax.googleapis.com/ajax/libs/angular_material/1.1.0-rc2/angular-material.js"></script>
+<!-- Angular Material Library -->
+<script src="http://ajax.googleapis.com/ajax/libs/angular_material/1.1.0-rc2/angular-material.js"></script>
 
-  <script src="app.js"></script>
+<script src="app.js"></script>
 
 </body>
 </html>

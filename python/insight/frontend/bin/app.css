@@ -1,0 +1,18 @@
+.matrix {
+  border-left: 1px solid darkgray;
+  border-right: 1px solid darkgray;
+  border-radius: 6px;
+}
+.matrix td {
+  padding: 5px;
+  text-align: right;
+}
+.param-list .param-list-item {
+  margin-bottom: 15px;
+}
+.param-list .param-list-item .item-label {
+  margin-bottom: 10px;
+}
+.insight-content .param-list {
+  margin-right: 40px;
+}

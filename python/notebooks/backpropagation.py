@@ -177,7 +177,7 @@ class FeedForward:
         if not issubclass(weight_generator.__class__, WeightGenerator):
             raise ValueError("weight_generator must be a subclass of WeightGenerator")
 
-        self.id = uuid.uuid4()
+        self.id = str(uuid.uuid4())
         self.layers = layers
         self.activation = activation
         self.cost = cost
@@ -259,16 +259,14 @@ class FeedForward:
         pretty_print("bias_gradients", self.bias_gradients)
 
     def to_web_safe_object(self):
-        web_safe_object = {}
-        web_safe_object.id = self.id
-        web_safe_object.biases = tolist(self.biases)
-        web_safe_object.weights = tolist(self.weights)
-        web_safe_object.inputs = tolist(self.inputs)
-        web_safe_object.outputs = tolist(self.outputs)
-        web_safe_object.node_errors = tolist(self.node_errors)
-        web_safe_object.weight_gradients = tolist(self.weight_gradients)
-        web_safe_object.bias_gradients = tolist(self.bias_gradients)
-        web_safe_object.total_error = self.total_error
-
-        return web_safe_object
-
+        return {
+            "id": self.id,
+            "biases": tolist(self.biases),
+            "weights": tolist(self.weights),
+            "inputs": tolist(self.inputs),
+            "outputs": tolist(self.outputs),
+            "node_errors": tolist(self.node_errors),
+            "weight_gradients": tolist(self.weight_gradients),
+            "bias_gradients": tolist(self.bias_gradients),
+            "total_error": self.total_error
+        }

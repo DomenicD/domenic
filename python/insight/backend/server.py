@@ -7,6 +7,7 @@ app = Flask(__name__)
 
 global_cache = {}
 
+
 @app.route('/create_feedforward', methods=["POST"])
 def create_feedforward():
     layers = request.json["layers"]
@@ -16,31 +17,34 @@ def create_feedforward():
                      QuadraticCost(),
                      SequenceWeightGenerator())
     global_cache[ff.id] = ff
-    return create_response(ff)
-
+    return create_response(ff.to_web_safe_object())
 
 
 @app.route('/get_feedforward/<id>', methods=["GET"])
 def get_feedforward(id: str) -> FeedForward:
-    ff = global_cache[id]
-    if ff is None or not isinstance(ff, FeedForward):
-        raise ValueError('Invalid id')
-    return create_response(ff)
+    ff = _get_feedforward(id)
+    return create_response(ff.to_web_safe_object())
+
 
 @app.route('/update_feedforward/<id>/<command>', methods=["POST"])
 def update_feedforward(id: str, command: str):
-    ff = get_feedforward(id)
+    ff = _get_feedforward(id)
     args = request.json["args"]
-    apply_args(getattr(ff, command), args)
-    return ff
+    getattr(ff, command)(*args)
+    return create_response(ff.to_web_safe_object())
 
 
 @app.route('/<path:path>', methods=["GET"])
 def static_files(path):
-    return send_from_directory('../frontend/bin', path)
+    return send_from_directory('../frontend', path)
 
-def apply_args(func, *args):
-    return func(args)
+
+def _get_feedforward(id):
+    ff = global_cache[id]
+    if ff is None or not isinstance(ff, FeedForward):
+        raise ValueError('Invalid id')
+    return ff
+
 
 def create_response(data):
     return Response(json.dumps(data), status=200, mimetype='application/json')
