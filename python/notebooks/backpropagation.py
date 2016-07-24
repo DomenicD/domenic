@@ -166,6 +166,52 @@ def pretty_print(title: str, seq: Union[Sequence[Any], Sequence[Sequence[Any]]])
     new_line()
 
 
+class Layer:
+    __metaclass__ = ABCMeta
+
+    def __init__(self,
+                 input_size: int,
+                 output_size: int,
+                 weight_generator: WeightGenerator = RandomWeightGenerator()):
+        self.inputs = np.zeros(input_size)
+        self.outputs = np.zeros(output_size)
+        self.errors = np.zeros(output_size)
+        self.weight_generator = weight_generator
+
+    def forward_pass(self, inputs: np.ndarray) -> np.ndarray:
+        self.inputs = inputs
+        self.outputs = self.activation(inputs)
+        return self.outputs
+
+    def backward_pass(self, errors: np.ndarray) -> np.ndarray:
+        self.errors = errors * self.activation_derivative(self.inputs)
+        return self.errors
+
+    @abstractmethod
+    def _backward_pass(self, errors: np.ndarray) -> np.ndarray: pass
+
+    @abstractmethod
+    def activation(self, inputs: np.ndarray) -> np.ndarray: pass
+
+    @abstractmethod
+    def activation_derivative(self, inputs: np.ndarray) -> np.ndarray:
+        """
+        This needs to calculate the full inner function derivative.
+        Example:
+            If node output is computed as f(x) = g(x*w + b),
+            then this function should return:
+            [w * g'(x * w + b), g'(x * w + b)]
+            This output corresponds to the partial derivative with respect to [w, b]
+
+        Example 2:
+            Transform: f(x) = (x * w + c)(x * r + d)
+            Result: [x * (x * r + d), x * (x * w + c), r * x + d, x * w + c]
+            Corresponds to partial derivatives with respect to [w, r, c, d]
+        """
+        pass
+
+
+
 class FeedForward:
     def __init__(self, layers: Sequence[int], activation: Activation, cost: Cost,
                  weight_generator: WeightGenerator = RandomWeightGenerator()):
@@ -192,7 +238,7 @@ class FeedForward:
         self.bias_gradients = [np.zeros(n) for n in self.layers[1:]]
         self.total_error = 0
 
-    def _generate_weights(self) -> Sequence[Sequence[float]]:
+    def _generate_weights(self) -> Sequence[Sequence[Sequence[float]]]:
         return np.array([self.weight_generator(self.layers[i], self.layers[i + 1]) for i in
                          range(len(self.layers) - 1)])
 
@@ -211,9 +257,17 @@ class FeedForward:
             final_output, expected) * self.activation.apply_derivative(self.inputs[-1])
 
         for i in reversed(range(len(self.weights))):
+            # This is not generalizable. It is a shortcut that is tied to the linear equation
+            # used as input to activation functions: w*x + b.
+            # For this to generalize to all types of input equations, the three lines below
+            # need to be one step.
             weighted_errors = np.matmul(self.node_errors[i + 1], np.transpose(self.weights[i]))
             rate_of_change = self.activation.apply_derivative(self.inputs[i])
+            # This is purely for computational efficiency. Since this part of the partial derivative
+            # will be required to compute the next layers partial derivative. We can cache this
+            # result and reuse it. This makes the backpropagation algorithm a dynamic program.
             self.node_errors[i] = weighted_errors * rate_of_change
+            # Full gradient; partial derivative with respect to weight parameter
             self.weight_gradients[i] = self.outputs[i] * self.node_errors[i]
             self.bias_gradients[i] = self.node_errors[i + 1]
 
