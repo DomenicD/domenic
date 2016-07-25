@@ -4,8 +4,6 @@ from typing import List, Union, Sequence, Callable, Any
 import numpy as np
 import collections
 
-ListableFloat = Union[float, Sequence[float]]
-
 
 def tolist(target: Any):
     if isinstance(target, collections.Iterable) and not isinstance(target, str):
@@ -42,7 +40,7 @@ def same_type(type_check: type, *args):
 class Activation:
     __metaclass__ = ABCMeta
 
-    def apply(self, value: ListableFloat) -> ListableFloat:
+    def apply(self, value: np.ndarray) -> np.ndarray:
         if same_type(float, value):
             return self._apply(value)
         elif same_size(value):
@@ -50,12 +48,8 @@ class Activation:
         else:
             raise ValueError("Value must be a float or list of floats.")
 
-    @abstractmethod
-    def _apply(self, value: float) -> float:
-        pass
-
-    def apply_derivative(self, value: ListableFloat) -> \
-            ListableFloat:
+    def apply_derivative(self, value: np.ndarray) -> \
+            np.ndarray:
         if same_type(float, value):
             return self._apply_derivative(value)
         elif same_size(value):
@@ -64,14 +58,37 @@ class Activation:
             raise ValueError("Value must be a float or list of floats.")
 
     @abstractmethod
+    def _apply(self, value: float) -> float:
+        pass
+
+    @abstractmethod
     def _apply_derivative(self, value: float) -> float:
         pass
+
+
+class RectifiedLinearUnitActivation(Activation):
+    def __init__(self, leak: float = 0):
+        super().__init__()
+        self.leak = leak
+
+    def _apply(self, value: float):
+        return max(self.leak * value, value)
+
+    def _apply_derivative(self, value: float):
+        return 1 if value > 0 else self.leak
+
+
+class IdentityActivation(Activation):
+    # TODO(domenic): Override the apply and apply_derivative functions to improve performance.
+    def _apply(self, value: float): return value
+
+    def _apply_derivative(self, value: float): return 1
 
 
 class Cost:
     __metaclass__ = ABCMeta
 
-    def apply(self, actual: ListableFloat, expected: ListableFloat) -> ListableFloat:
+    def apply(self, actual: np.ndarray, expected: np.ndarray) -> np.ndarray:
         if same_type(float, actual, expected):
             return self._apply(actual, expected)
         elif same_size(actual, expected):
@@ -83,7 +100,7 @@ class Cost:
     def _apply(self, actual: float, expected: float) -> float:
         pass
 
-    def apply_derivative(self, actual: ListableFloat, expected: ListableFloat) -> ListableFloat:
+    def apply_derivative(self, actual: np.ndarray, expected: np.ndarray) -> np.ndarray:
         if same_type(float, actual, expected):
             return self._apply_derivative(actual, expected)
         elif same_size(actual, expected):
@@ -96,24 +113,12 @@ class Cost:
         pass
 
 
-class WeightGenerator:
+class ParamGenerator:
     __metaclass__ = ABCMeta
 
     @abstractmethod
     def __call__(self, first_layer: int, second_layer: int) -> Sequence[Sequence[float]]:
         pass
-
-
-class RectifiedLinearUnit(Activation):
-    def __init__(self, leak: float = 0):
-        super().__init__()
-        self.leak = leak
-
-    def _apply(self, value: float):
-        return max(self.leak * value, value)
-
-    def _apply_derivative(self, value: float):
-        return 1 if value > 0 else self.leak
 
 
 class QuadraticCost(Cost):
@@ -124,12 +129,12 @@ class QuadraticCost(Cost):
         return actual - expected
 
 
-class RandomWeightGenerator(WeightGenerator):
+class RandomParamGenerator(ParamGenerator):
     def __call__(self, first_layer: int, second_layer: int) -> Sequence[Sequence[float]]:
         return np.random.rand(first_layer, second_layer) * 2 - .5
 
 
-class SequenceWeightGenerator(WeightGenerator):
+class SequenceParamGenerator(ParamGenerator):
     def __init__(self, start: float = -1, stop: float = 1):
         super().__init__()
         self.start = start
@@ -141,7 +146,7 @@ class SequenceWeightGenerator(WeightGenerator):
         return np.reshape(sequence, [first_layer, second_layer])
 
 
-class ConstantWeightGenerator(WeightGenerator):
+class ConstantParamGenerator(ParamGenerator):
     def __init__(self, constant: float = 1):
         super().__init__()
         self.constant = constant
@@ -172,63 +177,101 @@ class Layer:
     def __init__(self,
                  input_size: int,
                  output_size: int,
-                 weight_generator: WeightGenerator = RandomWeightGenerator()):
+                 activation: Activation = IdentityActivation()):
         self.inputs = np.zeros(input_size)
         self.outputs = np.zeros(output_size)
-        self.errors = np.zeros(output_size)
-        self.weight_generator = weight_generator
+        self.cached_derivative = np.ones(output_size)
+        self.activation = activation
 
-    def forward_pass(self, inputs: np.ndarray) -> np.ndarray:
-        self.inputs = inputs
-        self.outputs = self.activation(inputs)
+    def forward_pass(self, raw_inputs: np.ndarray) -> np.ndarray:
+        self.inputs = self.transform_inputs(raw_inputs)
+        self.outputs = self.activation.apply(self.inputs)
         return self.outputs
 
-    def backward_pass(self, errors: np.ndarray) -> np.ndarray:
-        self.errors = errors * self.activation_derivative(self.inputs)
-        return self.errors
+    def backward_pass(self, upstream_derivative: np.ndarray) -> np.ndarray:
+        self.cached_derivative = upstream_derivative
+        self.calculate_gradients()
+        self.cached_derivative *= self.cached_gradient_derivative * self.activation.apply_derivative(
+            self.inputs)
+        return self.cached_derivative
 
     @abstractmethod
-    def _backward_pass(self, errors: np.ndarray) -> np.ndarray: pass
+    def transform_inputs(self, raw_inputs: np.ndarray) -> np.ndarray: pass
 
     @abstractmethod
-    def activation(self, inputs: np.ndarray) -> np.ndarray: pass
+    def calculate_gradients(self): pass
 
     @abstractmethod
-    def activation_derivative(self, inputs: np.ndarray) -> np.ndarray:
-        """
-        This needs to calculate the full inner function derivative.
-        Example:
-            If node output is computed as f(x) = g(x*w + b),
-            then this function should return:
-            [w * g'(x * w + b), g'(x * w + b)]
-            This output corresponds to the partial derivative with respect to [w, b]
+    def cached_gradient_derivative(self) -> np.ndarray: pass
 
-        Example 2:
-            Transform: f(x) = (x * w + c)(x * r + d)
-            Result: [x * (x * r + d), x * (x * w + c), r * x + d, x * w + c]
-            Corresponds to partial derivatives with respect to [w, r, c, d]
-        """
-        pass
+    @abstractmethod
+    def adjust_parameters(self): pass
 
+
+class PolynomialLayer(Layer):
+    def __init__(self, input_size: int, output_size: int,
+                 param_generator: ParamGenerator = RandomParamGenerator()):
+        super().__init__(input_size, output_size)
+        # Forward pass parameters
+        self.fx_weights = param_generator(input_size, output_size)
+        self.fx_biases = param_generator(input_size, 1)
+        self.fx = np.zeros(output_size)
+        self.gx_weights = param_generator(input_size, output_size)
+        self.gx_biases = param_generator(input_size, 1)
+        self.gx = np.zeros(output_size)
+
+        # Backward pass parameters
+        self.fx_weight_gradients = np.zeros(input_size)
+        self.fx_bias_gradients = np.zeros(input_size)
+        self.gx_weight_gradients = np.zeros(input_size)
+        self.gx_bias_gradients = np.zeros(input_size)
+
+    def transform_inputs(self, raw_inputs: np.ndarray) -> np.ndarray:
+        self.fx = np.matmul(raw_inputs, self.fx_weights) + self.fx_biases
+        self.gx = np.matmul(raw_inputs, self.gx_weights) + self.gx_biases
+        return self.fx * self.gx
+
+    def calculate_gradients(self):
+        self.fx_weight_gradients = self.gx * self.fx_prime * self.cached_derivative
+        self.fx_bias_gradients = self.gx * self.cached_derivative
+        self.gx_weight_gradients = self.fx * self.gx_prime * self.cached_derivative
+        self.gx_bias_gradients = self.fx * self.cached_derivative
+
+    def cached_gradient_derivative(self) -> np.ndarray:
+        # TODO(domenic): See how this pattern extends to the linear input transform (x*W + b).
+        return np.matmul(self.fx, self.gx_weights) + np.matmul(self.gx, self.fx_weights)
+
+    def adjust_parameters(self):
+        # TODO(domenic): Need to come up with a design that will let me play with the way that
+        # parameters are updated. Should support standard things such as adjustable learning rates
+        # and momentum. In addition, should be flexible enough so I can try out new things such as
+        # only updating specific parameters on each pass.
+        raise NotImplemented("adjust_parameters not implemented")
+
+    @property
+    def fx_prime(self): return self.inputs
+
+    @property
+    def gx_prime(self): return self.inputs
 
 
 class FeedForward:
     def __init__(self, layers: Sequence[int], activation: Activation, cost: Cost,
-                 weight_generator: WeightGenerator = RandomWeightGenerator()):
+                 param_generator: ParamGenerator = RandomParamGenerator()):
         if isinstance(layers, str) or not isinstance(layers, (list, tuple)):
             raise ValueError("layers must be a list or tuple")
         if not issubclass(activation.__class__, Activation):
             raise ValueError("activation must be a subclass of Activation")
         if not issubclass(cost.__class__, Cost):
             raise ValueError("cost must be a subclass of Cost")
-        if not issubclass(weight_generator.__class__, WeightGenerator):
-            raise ValueError("weight_generator must be a subclass of WeightGenerator")
+        if not issubclass(param_generator.__class__, ParamGenerator):
+            raise ValueError("param_generator must be a subclass of ParamGenerator")
 
         self.id = str(uuid.uuid4())
         self.layers = layers
         self.activation = activation
         self.cost = cost
-        self.weight_generator = weight_generator
+        self.param_generator = param_generator
         self.weights = self._generate_weights()
         self.biases = [np.zeros(n) for n in self.layers[1:]]
         self.inputs = [np.zeros(n) for n in self.layers]
@@ -239,7 +282,7 @@ class FeedForward:
         self.total_error = 0
 
     def _generate_weights(self) -> Sequence[Sequence[Sequence[float]]]:
-        return np.array([self.weight_generator(self.layers[i], self.layers[i + 1]) for i in
+        return np.array([self.param_generator(self.layers[i], self.layers[i + 1]) for i in
                          range(len(self.layers) - 1)])
 
     def forward_pass(self, inputs: Sequence[float]):

@@ -7,7 +7,7 @@ import numpy as np
 class FeedForwardTest(unittest.TestCase):
     def test_forward_pass(self):
         net = bp.FeedForward([2, 3, 1],
-                             bp.RectifiedLinearUnit(),
+                             bp.RectifiedLinearUnitActivation(),
                              bp.QuadraticCost(),
                              bp.ConstantWeightGenerator())
         net.forward_pass([.5, 1.5])
@@ -30,7 +30,7 @@ class FeedForwardTest(unittest.TestCase):
 
     def test_backward_pass(self):
         net = bp.FeedForward([2, 3, 1],
-                             bp.RectifiedLinearUnit(),
+                             bp.RectifiedLinearUnitActivation(),
                              bp.QuadraticCost(),
                              bp.ConstantWeightGenerator())
         net.forward_pass([.5, 1.5])
@@ -48,7 +48,7 @@ class FeedForwardTest(unittest.TestCase):
 
     def test_adjust_weights(self):
         net = bp.FeedForward([2, 3, 1],
-                             bp.RectifiedLinearUnit(),
+                             bp.RectifiedLinearUnitActivation(),
                              bp.QuadraticCost(),
                              bp.ConstantWeightGenerator())
         net.forward_pass([.5, 1.5])
@@ -60,7 +60,7 @@ class FeedForwardTest(unittest.TestCase):
 
     def test_adjust_biases(self):
         net = bp.FeedForward([2, 3, 1],
-                             bp.RectifiedLinearUnit(),
+                             bp.RectifiedLinearUnitActivation(),
                              bp.QuadraticCost(),
                              bp.ConstantWeightGenerator())
         net.forward_pass([.5, 1.5])
@@ -72,7 +72,7 @@ class FeedForwardTest(unittest.TestCase):
 
     def test_adjust_parameters(self):
         net = bp.FeedForward([2, 3, 1],
-                             bp.RectifiedLinearUnit(),
+                             bp.RectifiedLinearUnitActivation(),
                              bp.QuadraticCost(),
                              bp.ConstantWeightGenerator())
         net.forward_pass([.5, 1.5])
@@ -88,25 +88,25 @@ class FeedForwardTest(unittest.TestCase):
 
 class RectifiedLinearUnit(unittest.TestCase):
     def test_apply(self):
-        relu = bp.RectifiedLinearUnit()
+        relu = bp.RectifiedLinearUnitActivation()
         self.assertEqual(relu.apply(5.), 5.)
         self.assertEqual(relu.apply(0.), 0.)
         self.assertEqual(relu.apply(-.5), 0.)
 
     def test_apply_derivative(self):
-        relu = bp.RectifiedLinearUnit()
+        relu = bp.RectifiedLinearUnitActivation()
         self.assertEqual(relu.apply_derivative(5.), 1.)
         self.assertEqual(relu.apply_derivative(0.), 0.)
         self.assertEqual(relu.apply_derivative(-.5), 0.)
 
     def test_apply_leak(self):
-        relu = bp.RectifiedLinearUnit(leak=.01)
+        relu = bp.RectifiedLinearUnitActivation(leak=.01)
         self.assertEqual(relu.apply(5.), 5.)
         self.assertEqual(relu.apply(0.), 0.)
         self.assertEqual(relu.apply(-.5), -.5 * .01)
 
     def test_apply_derivative_leak(self):
-        relu = bp.RectifiedLinearUnit(leak=.01)
+        relu = bp.RectifiedLinearUnitActivation(leak=.01)
         self.assertEqual(relu.apply_derivative(5.), 1.)
         self.assertEqual(relu.apply_derivative(0.), .01)
         self.assertEqual(relu.apply_derivative(-.5), .01)

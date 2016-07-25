@@ -1,6 +1,6 @@
 from flask import Flask, send_from_directory, request, Response, json, session
 
-from python.notebooks.backpropagation import FeedForward, RectifiedLinearUnit, QuadraticCost, \
+from python.notebooks.backpropagation import FeedForward, RectifiedLinearUnitActivation, QuadraticCost, \
     SequenceWeightGenerator
 
 app = Flask(__name__)
@@ -13,7 +13,7 @@ def create_feedforward():
     layers = request.json["layers"]
 
     ff = FeedForward(layers,
-                     RectifiedLinearUnit(),
+                     RectifiedLinearUnitActivation(),
                      QuadraticCost(),
                      SequenceWeightGenerator())
     global_cache[ff.id] = ff
