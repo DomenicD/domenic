@@ -1,6 +1,6 @@
 from flask import Flask, send_from_directory, request, Response, json, session
 
-from python.notebooks.backpropagation import FeedForward, RectifiedLinearUnitActivation, QuadraticCost, \
+from python.notebooks.networks import SimpleFeedForward, RectifiedLinearUnitActivation, QuadraticCost, \
     SequenceWeightGenerator
 
 app = Flask(__name__)
@@ -12,16 +12,16 @@ global_cache = {}
 def create_feedforward():
     layers = request.json["layers"]
 
-    ff = FeedForward(layers,
-                     RectifiedLinearUnitActivation(),
-                     QuadraticCost(),
-                     SequenceWeightGenerator())
+    ff = SimpleFeedForward(layers,
+                           RectifiedLinearUnitActivation(),
+                           QuadraticCost(),
+                           SequenceWeightGenerator())
     global_cache[ff.id] = ff
     return create_response(ff.to_web_safe_object())
 
 
 @app.route('/get_feedforward/<id>', methods=["GET"])
-def get_feedforward(id: str) -> FeedForward:
+def get_feedforward(id: str) -> SimpleFeedForward:
     ff = _get_feedforward(id)
     return create_response(ff.to_web_safe_object())
 
@@ -41,7 +41,7 @@ def static_files(path):
 
 def _get_feedforward(id):
     ff = global_cache[id]
-    if ff is None or not isinstance(ff, FeedForward):
+    if ff is None or not isinstance(ff, SimpleFeedForward):
         raise ValueError('Invalid id')
     return ff
 
