@@ -6,7 +6,6 @@ import numpy as np
 from python.notebooks.activation_functions import Activation, IdentityActivation
 from python.notebooks.domain_objects import Parameter
 from python.notebooks.parameter_generators import ParameterGenerator, ConstantParameterGenerator
-from python.notebooks.parameter_generators import RandomParameterGenerator
 from python.notebooks.parameter_updaters import ParameterUpdater, FlatParameterUpdater
 
 
@@ -19,21 +18,24 @@ class Layer:
                  parameter_updater: ParameterUpdater = FlatParameterUpdater(),
                  activation: Activation = IdentityActivation()):
         self.inputs = np.zeros(input_size)
+        self.pre_activation = np.zeros(input_size)
         self.outputs = np.zeros(output_size)
         self.cached_derivative = np.ones(output_size)
         self.parameter_updater = parameter_updater
         self.activation = activation
 
     def forward_pass(self, raw_inputs: np.ndarray) -> np.ndarray:
-        self.inputs = self.transform_inputs(raw_inputs)
-        self.outputs = self.activation.apply(self.inputs)
+        self.inputs = raw_inputs
+        self.pre_activation = self.transform_inputs(raw_inputs)
+        self.outputs = self.activation.apply(self.pre_activation)
         return self.outputs
 
     def backward_pass(self, upstream_derivative: np.ndarray) -> np.ndarray:
         self.cached_derivative = upstream_derivative
         self.calculate_gradients()
-        self.cached_derivative *= self.cached_gradient_derivative * self.activation.apply_derivative(
-            self.inputs)
+        self.cached_derivative = (self.cached_derivative *
+                                  self.cached_gradient_derivative() *
+                                  self.activation.apply_derivative(self.inputs))
         return self.cached_derivative
 
     def adjust_parameters(self):
@@ -83,15 +85,18 @@ class QuadraticLayer(Layer):
     def __init__(self,
                  input_size: int,
                  output_size: int,
+                 # TODO(domenic): The gradients of this are HUGE. Need to come up with an adaptive
+                 #                ParameterUpdater that takes the current weight value into
+                 #                consideration.
                  parameter_updater: ParameterUpdater = FlatParameterUpdater(),
                  parameter_generator: ParameterGenerator = ConstantParameterGenerator()):
         super().__init__(input_size, output_size, parameter_updater)
         # Forward pass parameters
         self.fx_weights = parameter_generator(input_size, output_size)
-        self.fx_biases = parameter_generator(output_size, 1)
+        self.fx_biases = parameter_generator(1, output_size)[0]
         self.fx = np.zeros(output_size)
         self.gx_weights = parameter_generator(input_size, output_size)
-        self.gx_biases = parameter_generator(output_size, 1)
+        self.gx_biases = parameter_generator(1, output_size)[0]
         self.gx = np.zeros(output_size)
 
         # Backward pass parameters
@@ -113,7 +118,8 @@ class QuadraticLayer(Layer):
 
     def cached_gradient_derivative(self) -> np.ndarray:
         # TODO(domenic): See how this pattern extends to the linear input transform (x*W + b).
-        return np.matmul(self.fx, self.gx_weights) + np.matmul(self.gx, self.fx_weights)
+        return (np.matmul(self.fx, np.transpose(self.gx_weights)) +
+                np.matmul(self.gx, np.transpose(self.fx_weights)))
 
     def get_parameters(self) -> Sequence[Parameter]:
         return [
@@ -134,4 +140,4 @@ class QuadraticLayer(Layer):
             elif parameter.name is self.gx_biases_name:
                 self.gx_biases = parameter.values
             else:
-                raise ValueError(parameter.name + " is not a valid PolynomialLayer parameter")
+                raise ValueError(parameter.name + " is not a valid QuadraticLayer parameter")

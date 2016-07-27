@@ -23,7 +23,7 @@ class FeedForward:
         output = self.layers[-1].outputs
         self.total_error = sum(self.cost.apply(output, expected))
         upstream_derivative = self.cost.apply_derivative(output, expected)
-        for layer in self.layers:
+        for layer in reversed(self.layers):
             upstream_derivative = layer.backward_pass(upstream_derivative)
 
     def adjust_parameters(self):
