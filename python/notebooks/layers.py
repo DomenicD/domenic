@@ -33,9 +33,10 @@ class Layer:
     def backward_pass(self, upstream_derivative: np.ndarray) -> np.ndarray:
         self.cached_derivative = upstream_derivative
         self.calculate_gradients()
-        self.cached_derivative = (self.cached_derivative *
+        # TODO(domenic): I have a bug here.
+        self.cached_derivative = [np.sum(x * self.cached_derivative) for x in
                                   self.cached_gradient_derivative() *
-                                  self.activation.apply_derivative(self.inputs))
+                                  self.activation.apply_derivative(self.inputs)]
         return self.cached_derivative
 
     def adjust_parameters(self):
@@ -111,9 +112,12 @@ class QuadraticLayer(Layer):
         return self.fx * self.gx
 
     def calculate_gradients(self):
-        self.fx_weight_gradients = self.gx * self.fx_prime * self.cached_derivative
+        # TODO(domenic): I am close, but not there yet.
+        self.fx_weight_gradients = [prime * self.gx * self.cached_derivative for prime in
+                                    self.fx_prime]
         self.fx_bias_gradients = self.gx * self.cached_derivative
-        self.gx_weight_gradients = self.fx * self.gx_prime * self.cached_derivative
+        self.gx_weight_gradients = [prime * self.fx * self.cached_derivative for prime in
+                                    self.gx_prime]
         self.gx_bias_gradients = self.fx * self.cached_derivative
 
     def cached_gradient_derivative(self) -> np.ndarray:

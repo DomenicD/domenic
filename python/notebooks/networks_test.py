@@ -6,7 +6,8 @@ from python.notebooks.activation_functions import RectifiedLinearUnitActivation
 from python.notebooks.cost_functions import QuadraticCost
 from python.notebooks.layers import QuadraticLayer
 from python.notebooks.networks import SimpleFeedForward, FeedForward
-from python.notebooks.parameter_generators import ConstantParameterGenerator
+from python.notebooks.parameter_generators import ConstantParameterGenerator, \
+    SequenceParameterGenerator
 
 
 class FeedForwardTest(unittest.TestCase):
@@ -19,7 +20,7 @@ class FeedForwardTest(unittest.TestCase):
         feed_forward.forward_pass([2])
         np.testing.assert_array_equal(layers[-1].outputs, [784])
 
-    def test_backward_pass(self):
+    def test_backward_pass_basic(self):
         layers = [
             QuadraticLayer(1, 3),
             QuadraticLayer(3, 1)
@@ -27,6 +28,27 @@ class FeedForwardTest(unittest.TestCase):
         feed_forward = FeedForward(layers)
         feed_forward.forward_pass([2])
         feed_forward.backward_pass([500])
+
+        np.testing.assert_array_equal(layers[0].fx_weight_gradients, [95424, 95424, 95424])
+        np.testing.assert_array_equal(layers[0].fx_bias_gradients, [47712, 47712, 47712])
+        np.testing.assert_array_equal(layers[0].gx_weight_gradients, [95424, 95424, 95424])
+        np.testing.assert_array_equal(layers[0].gx_bias_gradients, [47712, 47712, 47712])
+
+        np.testing.assert_array_equal(layers[1].fx_weight_gradients, [71568, 71568, 71568])
+        np.testing.assert_array_equal(layers[1].fx_bias_gradients, [7952])
+        np.testing.assert_array_equal(layers[1].gx_weight_gradients, [71568, 71568, 71568])
+        np.testing.assert_array_equal(layers[1].gx_bias_gradients, [7952])
+
+    def test_backward_pass_multi_input_output(self):
+        layers = [
+            QuadraticLayer(2, 3, parameter_generator=SequenceParameterGenerator()),
+            QuadraticLayer(3, 2, parameter_generator=SequenceParameterGenerator())
+        ]
+        feed_forward = FeedForward(layers)
+        feed_forward.forward_pass([-3, 3])
+        np.testing.assert_array_almost_equal(layers[1].outputs, [5.49434, 428.324], 3)
+
+        feed_forward.backward_pass([18, -18])
 
         np.testing.assert_array_equal(layers[0].fx_weight_gradients, [95424, 95424, 95424])
         np.testing.assert_array_equal(layers[0].fx_bias_gradients, [47712, 47712, 47712])
