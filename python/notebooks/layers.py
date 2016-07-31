@@ -33,10 +33,9 @@ class Layer:
     def backward_pass(self, upstream_derivative: np.ndarray) -> np.ndarray:
         self.cached_derivative = upstream_derivative
         self.calculate_gradients()
-        # TODO(domenic): I have a bug here.
-        self.cached_derivative = [np.sum(x * self.cached_derivative) for x in
-                                  self.cached_gradient_derivative() *
-                                  self.activation.apply_derivative(self.inputs)]
+        self.cached_derivative = np.multiply(self.activation.apply_derivative(self.inputs),
+                                             np.matmul(self.cached_derivative,
+                                                       self.cached_gradient_derivative()))
         return self.cached_derivative
 
     def adjust_parameters(self):
@@ -77,11 +76,11 @@ class QuadraticLayer(Layer):
 
     @property
     def fx_prime(self):
-        return self.inputs
+        return np.transpose(np.matrix(self.inputs))
 
     @property
     def gx_prime(self):
-        return self.inputs
+        return np.transpose(np.matrix(self.inputs))
 
     def __init__(self,
                  input_size: int,
@@ -94,10 +93,10 @@ class QuadraticLayer(Layer):
         super().__init__(input_size, output_size, parameter_updater)
         # Forward pass parameters
         self.fx_weights = parameter_generator(input_size, output_size)
-        self.fx_biases = parameter_generator(1, output_size)[0]
+        self.fx_biases = parameter_generator(1, output_size)[0]  # Get 1-d array.
         self.fx = np.zeros(output_size)
         self.gx_weights = parameter_generator(input_size, output_size)
-        self.gx_biases = parameter_generator(1, output_size)[0]
+        self.gx_biases = parameter_generator(1, output_size)[0]  # Get 1-d array.
         self.gx = np.zeros(output_size)
 
         # Backward pass parameters
@@ -112,18 +111,20 @@ class QuadraticLayer(Layer):
         return self.fx * self.gx
 
     def calculate_gradients(self):
-        # TODO(domenic): I am close, but not there yet.
-        self.fx_weight_gradients = [prime * self.gx * self.cached_derivative for prime in
-                                    self.fx_prime]
-        self.fx_bias_gradients = self.gx * self.cached_derivative
-        self.gx_weight_gradients = [prime * self.fx * self.cached_derivative for prime in
-                                    self.gx_prime]
-        self.gx_bias_gradients = self.fx * self.cached_derivative
+        fx_error = np.multiply(self.gx, self.cached_derivative)
+        self.fx_bias_gradients = fx_error.A1  # A1 converts matrix to 1-d array.
+        self.fx_weight_gradients = np.matmul(self.fx_prime, fx_error)
+
+        gx_error = np.multiply(self.fx, self.cached_derivative)
+        self.gx_bias_gradients = gx_error.A1  # A1 converts matrix to 1-d array.
+        self.gx_weight_gradients = np.matmul(self.gx_prime, gx_error)
 
     def cached_gradient_derivative(self) -> np.ndarray:
         # TODO(domenic): See how this pattern extends to the linear input transform (x*W + b).
-        return (np.matmul(self.fx, np.transpose(self.gx_weights)) +
-                np.matmul(self.gx, np.transpose(self.fx_weights)))
+        return np.transpose(
+            np.matrix([[f * r + g * w
+                        for f, g, w, r in zip(self.fx, self.gx, ws, rs)]
+                       for ws, rs in zip(self.fx_weights, self.gx_weights)]))
 
     def get_parameters(self) -> Sequence[Parameter]:
         return [
