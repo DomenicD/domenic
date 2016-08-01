@@ -12,11 +12,17 @@ from python.notebooks.parameter_updaters import ParameterUpdater, FlatParameterU
 class Layer:
     __metaclass__ = ABCMeta
 
+    @property
+    def parameter_prefix(self) -> str:
+        return "level_" + str(self.level) + "_"
+
     def __init__(self,
                  input_size: int,
                  output_size: int,
+                 level: int,
                  parameter_updater: ParameterUpdater = FlatParameterUpdater(),
                  activation: Activation = IdentityActivation()):
+        self.level = level
         self.inputs = np.zeros(input_size)
         self.pre_activation = np.zeros(input_size)
         self.outputs = np.zeros(output_size)
@@ -38,6 +44,7 @@ class Layer:
                                                        self.cached_gradient_derivative()))
         return self.cached_derivative
 
+    # NOTE: Updating parameters can be done in parallel.
     def adjust_parameters(self):
         self.set_parameters(self.parameter_updater(self.get_parameters()))
 
@@ -59,20 +66,20 @@ class Layer:
 
 class QuadraticLayer(Layer):
     @property
-    def fx_weights_name(self):
-        return "fx_weights"
+    def fx_weights_name(self) -> str:
+        return self.parameter_prefix + "fx_weights"
 
     @property
-    def fx_biases_name(self):
-        return "fx_biases"
+    def fx_biases_name(self) -> str:
+        return self.parameter_prefix + "fx_biases"
 
     @property
-    def gx_weights_name(self):
-        return "gx_weights"
+    def gx_weights_name(self) -> str:
+        return self.parameter_prefix + "gx_weights"
 
     @property
-    def gx_biases_name(self):
-        return "gx_biases"
+    def gx_biases_name(self) -> str:
+        return self.parameter_prefix + "gx_biases"
 
     @property
     def fx_prime(self):
@@ -85,12 +92,10 @@ class QuadraticLayer(Layer):
     def __init__(self,
                  input_size: int,
                  output_size: int,
-                 # TODO(domenic): The gradients of this are HUGE. Need to come up with an adaptive
-                 #                ParameterUpdater that takes the current weight value into
-                 #                consideration.
+                 level: int,
                  parameter_updater: ParameterUpdater = FlatParameterUpdater(),
                  parameter_generator: ParameterGenerator = ConstantParameterGenerator()):
-        super().__init__(input_size, output_size, parameter_updater)
+        super().__init__(input_size, output_size, level, parameter_updater)
         # Forward pass parameters
         self.fx_weights = parameter_generator(input_size, output_size)
         self.fx_biases = parameter_generator(1, output_size)[0]  # Get 1-d array.

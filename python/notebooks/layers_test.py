@@ -7,8 +7,8 @@ from python.notebooks.layers import QuadraticLayer
 
 class QuadraticLayerTest(unittest.TestCase):
     def test_forward_pass(self):
-        layer_1 = QuadraticLayer(1, 3)
-        layer_2 = QuadraticLayer(3, 1)
+        layer_1 = QuadraticLayer(1, 3, level=1)
+        layer_2 = QuadraticLayer(3, 1, level=2)
 
         layer_1.forward_pass([2])
         np.testing.assert_array_equal(layer_1.inputs, [2])

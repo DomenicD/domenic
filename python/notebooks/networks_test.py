@@ -13,8 +13,8 @@ from python.notebooks.parameter_generators import ConstantParameterGenerator, \
 class FeedForwardTest(unittest.TestCase):
     def test_forward_pass(self):
         layers = [
-            QuadraticLayer(1, 3),
-            QuadraticLayer(3, 1)
+            QuadraticLayer(1, 3, level=1),
+            QuadraticLayer(3, 1, level=2)
         ]
         feed_forward = FeedForward(layers)
         feed_forward.forward_pass([2])
@@ -22,8 +22,8 @@ class FeedForwardTest(unittest.TestCase):
 
     def test_backward_pass_basic(self):
         layers = [
-            QuadraticLayer(1, 3),
-            QuadraticLayer(3, 1)
+            QuadraticLayer(1, 3, level=1),
+            QuadraticLayer(3, 1, level=2)
         ]
         feed_forward = FeedForward(layers)
         feed_forward.forward_pass([2])
@@ -43,8 +43,8 @@ class FeedForwardTest(unittest.TestCase):
 
     def test_backward_pass_multi_input_output(self):
         layers = [
-            QuadraticLayer(2, 3, parameter_generator=SequenceParameterGenerator()),
-            QuadraticLayer(3, 2, parameter_generator=SequenceParameterGenerator())
+            QuadraticLayer(2, 3, level=1, parameter_generator=SequenceParameterGenerator()),
+            QuadraticLayer(3, 2, level=2, parameter_generator=SequenceParameterGenerator())
         ]
         feed_forward = FeedForward(layers)
         feed_forward.forward_pass([-3, 3])
@@ -83,9 +83,9 @@ class FeedForwardTest(unittest.TestCase):
 
     def test_backward_pass_large_network(self):
         layers = [
-            QuadraticLayer(3, 5, parameter_generator=SequenceParameterGenerator()),
-            QuadraticLayer(5, 4, parameter_generator=SequenceParameterGenerator()),
-            QuadraticLayer(4, 5, parameter_generator=SequenceParameterGenerator())
+            QuadraticLayer(3, 5, level=1, parameter_generator=SequenceParameterGenerator()),
+            QuadraticLayer(5, 4, level=2, parameter_generator=SequenceParameterGenerator()),
+            QuadraticLayer(4, 5, level=3, parameter_generator=SequenceParameterGenerator())
         ]
 
         feed_forward = FeedForward(layers)
