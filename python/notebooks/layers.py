@@ -1,12 +1,12 @@
 from abc import ABCMeta, abstractmethod
-from typing import Sequence
+from typing import Mapping
 
 import numpy as np
 
 from python.notebooks.activation_functions import Activation, IdentityActivation
-from python.notebooks.domain_objects import Parameter
+from python.notebooks.domain_objects import ParameterSet, parameter_set_map
 from python.notebooks.parameter_generators import ParameterGenerator, ConstantParameterGenerator
-from python.notebooks.parameter_updaters import ParameterUpdater, FlatParameterUpdater
+from python.notebooks.parameter_updaters import ParameterUpdater
 
 
 class Layer:
@@ -20,7 +20,7 @@ class Layer:
                  input_size: int,
                  output_size: int,
                  level: int,
-                 parameter_updater: ParameterUpdater = FlatParameterUpdater(),
+                 parameter_updater: ParameterUpdater,
                  activation: Activation = IdentityActivation()):
         self.level = level
         self.inputs = np.zeros(input_size)
@@ -58,10 +58,10 @@ class Layer:
     def cached_gradient_derivative(self) -> np.ndarray: pass
 
     @abstractmethod
-    def get_parameters(self) -> Sequence[Parameter]: pass
+    def get_parameters(self) -> Mapping[str, ParameterSet]: pass
 
     @abstractmethod
-    def set_parameters(self, parameters: Sequence[Parameter]): pass
+    def set_parameters(self, parameters: Mapping[str, ParameterSet]): pass
 
 
 class QuadraticLayer(Layer):
@@ -93,7 +93,7 @@ class QuadraticLayer(Layer):
                  input_size: int,
                  output_size: int,
                  level: int,
-                 parameter_updater: ParameterUpdater = FlatParameterUpdater(),
+                 parameter_updater: ParameterUpdater,
                  parameter_generator: ParameterGenerator = ConstantParameterGenerator()):
         super().__init__(input_size, output_size, level, parameter_updater)
         # Forward pass parameters
@@ -131,23 +131,23 @@ class QuadraticLayer(Layer):
                         for f, g, w, r in zip(self.fx, self.gx, ws, rs)]
                        for ws, rs in zip(self.fx_weights, self.gx_weights)]))
 
-    def get_parameters(self) -> Sequence[Parameter]:
-        return [
-            Parameter(self.fx_weights_name, self.fx_weights, self.fx_weight_gradients),
-            Parameter(self.fx_biases_name, self.fx_biases, self.fx_bias_gradients),
-            Parameter(self.gx_weights_name, self.gx_weights, self.gx_weight_gradients),
-            Parameter(self.gx_biases_name, self.gx_biases, self.gx_bias_gradients)
-        ]
+    def get_parameters(self) -> Mapping[str, ParameterSet]:
+        return parameter_set_map([
+            ParameterSet(self.fx_weights_name, self.fx_weights, self.fx_weight_gradients),
+            ParameterSet(self.fx_biases_name, self.fx_biases, self.fx_bias_gradients),
+            ParameterSet(self.gx_weights_name, self.gx_weights, self.gx_weight_gradients),
+            ParameterSet(self.gx_biases_name, self.gx_biases, self.gx_bias_gradients)
+        ])
 
-    def set_parameters(self, parameters: Sequence[Parameter]):
-        for parameter in parameters:
-            if parameter.name is self.fx_weights_name:
-                self.fx_weights = parameter.values
-            elif parameter.name is self.fx_biases_name:
-                self.fx_biases = parameter.values
-            elif parameter.name is self.gx_weights_name:
-                self.gx_weights = parameter.values
-            elif parameter.name is self.gx_biases_name:
-                self.gx_biases = parameter.values
-            else:
-                raise ValueError(parameter.name + " is not a valid QuadraticLayer parameter")
+    def set_parameters(self, parameters: Mapping[str, ParameterSet]):
+        if self.fx_weights_name in parameters:
+            self.fx_weights = parameters.get(self.fx_weights_name).values
+
+        if self.fx_biases_name in parameters:
+            self.fx_biases = parameters.get(self.fx_biases_name).values
+
+        if self.gx_weights_name in parameters:
+            self.gx_weights = parameters.get(self.gx_weights_name).values
+
+        if self.gx_biases_name in parameters:
+            self.gx_biases = parameters.get(self.gx_biases_name).values

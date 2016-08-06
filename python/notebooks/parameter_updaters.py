@@ -1,10 +1,11 @@
 from abc import ABCMeta, abstractmethod
-from typing import Sequence
+from typing import Sequence, Callable, Mapping
 
-from python.notebooks.domain_objects import Parameter
+from python.notebooks.domain_objects import ParameterSet, Parameter
 import numpy as np
 
-class ParameterUpdater:
+
+class ParameterUpdateStep:
     __metaclass__ = ABCMeta
 
     @abstractmethod
@@ -12,41 +13,69 @@ class ParameterUpdater:
         pass
 
 
-class FlatParameterUpdater(ParameterUpdater):
-    def __init__(self, learning_rate: float = .01):
+class ParameterUpdater:
+    def __init__(self, steps: Sequence[ParameterUpdateStep]):
+        self.steps = steps
+
+    def __call__(self, parameter_set_map: Mapping[str, ParameterSet]) -> Mapping[str, ParameterSet]:
+        parameters = [p for ps in parameter_set_map.values() for p in ps.parameters]
+
+        for step in self.steps:
+            parameters = step(parameters)
+
+        for p in parameters:
+            p.value += p.delta
+
+        return parameter_set_map
+
+
+class ParameterDeltaTransform:
+    __metaclass__ = ABCMeta
+
+    @abstractmethod
+    def __call__(self, parameter: Parameter) -> float:
+        pass
+
+
+class DeltaParameterUpdateStep(ParameterUpdateStep):
+    def __init__(self, transform: ParameterDeltaTransform):
+        self.transform = transform
+
+    def __call__(self, parameters: Sequence[Parameter]) -> Sequence[Parameter]:
+        for p in parameters:
+            p.delta = self.transform(p)
+        return parameters
+
+
+class FlatParameterDeltaTransform(ParameterDeltaTransform):
+    def __init__(self, learning_rate: float):
         self.learning_rate = learning_rate
 
+    def __call__(self, parameter: Parameter) -> float:
+        return -self.learning_rate * parameter.gradient
+
+
+class ErrorRegularizedParameterDeltaTransform(ParameterDeltaTransform):
+    def __init__(self, total_error_getter_function: Callable[[], float]):
+        self.total_error_getter_function = total_error_getter_function
+
+    def __call__(self, parameter: Parameter) -> float:
+        total_error = self.total_error_getter_function()
+        if total_error > abs(parameter.gradient):
+            return parameter.gradient / total_error
+        else:
+            return total_error / parameter.gradient
+
+
+class LogarithmicScaleParameterDeltaTransform(ParameterDeltaTransform):
+    def __call__(self, parameter: Parameter) -> float:
+        return np.sign(parameter.delta) * np.log(1 + abs(parameter.delta))
+
+
+class LargestEffectFilteringParameterUpdateStep(ParameterUpdateStep):
+    def __init__(self, keep_rate: float):
+        self.keep_rate = keep_rate
+
     def __call__(self, parameters: Sequence[Parameter]) -> Sequence[Parameter]:
-        for parameter in parameters:
-            parameter.values -= np.multiply(self.learning_rate, parameter.gradients)
-        return parameters
-
-
-class GeneticParameterUpdater(ParameterUpdater):
-    def __init__(self, update_rate: float = .2):
-        self.update_rate = update_rate
-        self.previous_update_map = {}
-
-    def __call__(self, parameters: Sequence[Parameter]) -> Sequence[Parameter]:
-        for parameter in parameters:
-            self.update_parameter(parameter)
-        return parameters
-
-    def update_parameter(self, parameter):
-        previous = self.previous_update(parameter)
-        flat_gradients = parameter.gradients.flatten()
-        max_indices = reversed(np.argsort(flat_gradients))
-        adjustments = np.zeros(flat_gradients.shape)
-
-        # TODO: We only want to update the worst X % parameters.
-        # Rather than computing the length, see how to only take N
-        # from a reversed iterator.
-        # Plan is to reshape the adjustments array and apply it to the values.
-        updates_to_make = len(flat_gradients) * self.update_rate
-        for i in np.arange(updates_to_make):
-            pass
-
-    def previous_update(self, parameter):
-        if parameter.name not in self.previous_update_map:
-            self.previous_update_map[parameter.name] = np.zeros(parameter.values.shape)
-        return self.previous_update_map[parameter.name]
+        sorted(parameters, key=lambda p: -abs(p.gradient))
+        return parameters[:int(len(parameters) * self.keep_rate)]
