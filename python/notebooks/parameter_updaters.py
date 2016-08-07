@@ -77,5 +77,5 @@ class LargestEffectFilteringParameterUpdateStep(ParameterUpdateStep):
         self.keep_rate = keep_rate
 
     def __call__(self, parameters: Sequence[Parameter]) -> Sequence[Parameter]:
-        sorted(parameters, key=lambda p: -abs(p.gradient))
-        return parameters[:int(len(parameters) * self.keep_rate)]
+        sorted_parameters = sorted(parameters, key=lambda p: -abs(p.gradient))
+        return sorted_parameters[:int(np.ceil(len(sorted_parameters) * self.keep_rate))]
