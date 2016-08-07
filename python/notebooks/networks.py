@@ -1,4 +1,5 @@
 import uuid
+from abc import ABCMeta, abstractmethod
 from typing import Sequence, Mapping
 import numpy as np
 
@@ -10,11 +11,32 @@ from python.notebooks.parameter_generators import ParameterGenerator, RandomPara
 from python.notebooks.utils import pretty_print, tolist
 
 
-class FeedForward:
-    def __init__(self, layers: Sequence[Layer], cost: Cost = QuadraticCost()):
+class NeuralNetwork:
+    __metaclass__ = ABCMeta
+
+    def __init__(self, layers: Sequence[Layer]):
         self.layers = layers
-        self.cost = cost
         self.total_error = 0.0
+
+    def adjust_parameters(self) -> Sequence[Mapping[str, ParameterSet]]:
+        return [layer.adjust_parameters() for layer in self.layers]
+
+    def get_parameters(self):
+        return [layer.get_parameters() for layer in self.layers]
+
+    @abstractmethod
+    def forward_pass(self, inputs: Sequence[float]):
+        pass
+
+    @abstractmethod
+    def backward_pass(self, expected: Sequence[float]):
+        pass
+
+
+class FeedForward(NeuralNetwork):
+    def __init__(self, layers: Sequence[Layer], cost: Cost = QuadraticCost()):
+        super().__init__(layers)
+        self.cost = cost
 
     def forward_pass(self, inputs: Sequence[float]):
         for layer in self.layers:
@@ -26,12 +48,6 @@ class FeedForward:
         upstream_derivative = np.matrix(self.cost.apply_derivative(output, expected))
         for layer in reversed(self.layers):
             upstream_derivative = layer.backward_pass(upstream_derivative)
-
-    def adjust_parameters(self) -> Sequence[Mapping[str, ParameterSet]]:
-        return [layer.adjust_parameters() for layer in self.layers]
-
-    def get_parameters(self):
-        return [layer.get_parameters() for layer in self.layers]
 
 
 class SimpleFeedForward:
