@@ -44,9 +44,10 @@ class Layer:
                                                        self.cached_gradient_derivative()))
         return self.cached_derivative
 
-    # NOTE: Updating parameters can be done in parallel.
-    def adjust_parameters(self):
-        self.set_parameters(self.parameter_updater(self.get_parameters()))
+    def adjust_parameters(self) -> Mapping[str, ParameterSet]:
+        parameter_update = self.parameter_updater(self.get_parameters())
+        self.set_parameters(parameter_update)
+        return parameter_update
 
     @abstractmethod
     def transform_inputs(self, raw_inputs: np.ndarray) -> np.ndarray: pass

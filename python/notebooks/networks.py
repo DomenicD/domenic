@@ -1,9 +1,10 @@
 import uuid
-from typing import Sequence
+from typing import Sequence, Mapping
 import numpy as np
 
 from python.notebooks.activation_functions import Activation
 from python.notebooks.cost_functions import Cost, QuadraticCost
+from python.notebooks.domain_objects import ParameterSet
 from python.notebooks.layers import Layer
 from python.notebooks.parameter_generators import ParameterGenerator, RandomParameterGenerator
 from python.notebooks.utils import pretty_print, tolist
@@ -26,12 +27,11 @@ class FeedForward:
         for layer in reversed(self.layers):
             upstream_derivative = layer.backward_pass(upstream_derivative)
 
-    def adjust_parameters(self):
-        for layer in self.layers:
-            layer.adjust_parameters()
+    def adjust_parameters(self) -> Sequence[Mapping[str, ParameterSet]]:
+        return [layer.adjust_parameters() for layer in self.layers]
 
     def get_parameters(self):
-        return [map(lambda p: p.serialize(), layer.get_parameters()) for layer in self.layers]
+        return [layer.get_parameters() for layer in self.layers]
 
 
 class SimpleFeedForward:
