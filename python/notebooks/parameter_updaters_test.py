@@ -4,30 +4,30 @@ import numpy as np
 
 from python.notebooks.domain_objects import ParameterSet, parameter_set_map, Parameter
 from python.notebooks.parameter_updaters import ParameterUpdater, \
-    DeltaParameterUpdateStep, FlatParameterDeltaTransform, ErrorRegularizedParameterDeltaTransform, \
+    DeltaParameterUpdateStep, ScaledGradientParameterDeltaTransform, ErrorRegularizedParameterDeltaTransform, \
     LogarithmicScaleParameterDeltaTransform, LargestEffectFilteringParameterUpdateStep
 
 
 class ParameterUpdaterTest(unittest.TestCase):
     def test_e2e_with_flat_parameter_transform(self):
         updater = ParameterUpdater(
-            [DeltaParameterUpdateStep(FlatParameterDeltaTransform(learning_rate=.01))])
+            [DeltaParameterUpdateStep(ScaledGradientParameterDeltaTransform(learning_rate=.01))])
 
         param_map = parameter_set_map([
             ParameterSet("param_1", [[1, 1, 1], [1, 1, 1]], [[5, 10, -5], [0, 100, -50]]),
             ParameterSet("param_2", [1, 1, 1], [0, 100, -50])
         ])
-        result_map = updater(param_map)
-        self.assertEqual(result_map, param_map)
-        np.testing.assert_allclose(param_map["param_1"].values, [[0.95, 0.9, 1.05], [1., 0., 1.5]])
-        np.testing.assert_allclose(param_map["param_2"].values, [1., 0., 1.5])
+        result_map = updater.calculate(param_map)
+        result_map = updater.adjust([result_map])
+        np.testing.assert_allclose(result_map["param_1"].values, [[0.95, 0.9, 1.05], [1., 0., 1.5]])
+        np.testing.assert_allclose(result_map["param_2"].values, [1., 0., 1.5])
 
 
 class DeltaTransformTest(unittest.TestCase):
     def test_error_regularized(self):
         total_error = 5
         transformer = ErrorRegularizedParameterDeltaTransform(
-            total_error_getter_function=lambda: total_error)
+            total_error_getter=lambda: total_error)
 
         parameter = Parameter("set_a", 1, 4, -10, 0)
         result = transformer(parameter)

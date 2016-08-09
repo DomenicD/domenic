@@ -21,9 +21,12 @@ class ParameterSet:
             raise ValueError("Parameter values and gradients must be the same shape")
         self.shape = values.shape
         self.name = name
-        self.parameters = [Parameter(self.name, index, value, gradient, 0) for
-                           index, value, gradient in
+
+        self.parameters = [Parameter(self.name, idx, value, gradient, 0)
+                           for idx, value, gradient in
                            zip(range(values.size), values.flatten(), gradients.flatten())]
+
+        self.parameter_map = {p.name: p for p in self.parameters}
 
     @property
     def values(self):

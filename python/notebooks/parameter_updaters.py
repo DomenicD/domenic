@@ -17,16 +17,40 @@ class ParameterUpdater:
     def __init__(self, steps: Sequence[ParameterUpdateStep]):
         self.steps = steps
 
-    def __call__(self, parameter_set_map: Mapping[str, ParameterSet]) -> Mapping[str, ParameterSet]:
-        parameters = [p for ps in parameter_set_map.values() for p in ps.parameters]
+    def calculate(self, param_map: Mapping[str, ParameterSet]) -> Mapping[str, ParameterSet]:
+        parameters = [p for ps in param_map.values() for p in ps.parameters]
 
         for step in self.steps:
             parameters = step(parameters)
 
         for p in parameters:
-            p.value += p.delta
+            p.delta = -p.delta
 
-        return parameter_set_map
+        return param_map
+
+    def adjust(self,
+               param_set_maps: Sequence[Mapping[str, ParameterSet]]) -> Mapping[str, ParameterSet]:
+        count = len(param_set_maps)
+        if count < 1:
+            raise ValueError("param_maps must contain at least one element")
+
+        result = param_set_maps[0]
+
+        for param_set_map in param_set_maps:
+            for param_set in param_set_map.values():
+                for key in param_set.parameter_map.keys():
+                    delta = param_set.parameter_map[key].delta
+                    scaled_delta = delta / count
+                    if param_set_map is result:
+                        param_set.parameter_map[key].delta = scaled_delta
+                    else:
+                        param_set.parameter_map[key].delta += scaled_delta
+
+        for param_set in result.values():
+            for p in param_set.parameters:
+                p.value += p.delta
+
+        return result
 
 
 class ParameterDeltaTransform:
@@ -47,17 +71,25 @@ class DeltaParameterUpdateStep(ParameterUpdateStep):
         return parameters
 
 
-class FlatParameterDeltaTransform(ParameterDeltaTransform):
+class FlatScaleParameterDeltaTransform(ParameterDeltaTransform):
     def __init__(self, learning_rate: float):
         self.learning_rate = learning_rate
 
     def __call__(self, parameter: Parameter) -> float:
-        return -self.learning_rate * parameter.gradient
+        return self.learning_rate * parameter.delta
+
+
+class ScaledGradientParameterDeltaTransform(ParameterDeltaTransform):
+    def __init__(self, learning_rate: float):
+        self.learning_rate = learning_rate
+
+    def __call__(self, parameter: Parameter) -> float:
+        return self.learning_rate * parameter.gradient
 
 
 class ErrorRegularizedParameterDeltaTransform(ParameterDeltaTransform):
-    def __init__(self, total_error_getter_function: Callable[[], float]):
-        self.total_error_getter_function = total_error_getter_function
+    def __init__(self, total_error_getter: Callable[[], float]):
+        self.total_error_getter_function = total_error_getter
 
     def __call__(self, parameter: Parameter) -> float:
         total_error = self.total_error_getter_function()

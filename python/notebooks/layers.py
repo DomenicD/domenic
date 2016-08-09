@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from typing import Mapping
+from typing import Mapping, Sequence
 
 import numpy as np
 
@@ -17,16 +17,18 @@ class Layer:
         return "level_" + str(self.level) + "_"
 
     def __init__(self,
-                 input_size: int,
-                 output_size: int,
+                 input_count: int,
+                 output_count: int,
                  level: int,
                  parameter_updater: ParameterUpdater,
                  activation: Activation = IdentityActivation()):
+        self.input_count = input_count
+        self.output_count = output_count
         self.level = level
-        self.inputs = np.zeros(input_size)
-        self.pre_activation = np.zeros(input_size)
-        self.outputs = np.zeros(output_size)
-        self.cached_derivative = np.ones(output_size)
+        self.inputs = np.zeros(input_count)
+        self.pre_activation = np.zeros(input_count)
+        self.outputs = np.zeros(output_count)
+        self.cached_derivative = np.ones(output_count)
         self.parameter_updater = parameter_updater
         self.activation = activation
 
@@ -44,10 +46,15 @@ class Layer:
                                                        self.cached_gradient_derivative()))
         return self.cached_derivative
 
-    def adjust_parameters(self) -> Mapping[str, ParameterSet]:
-        parameter_update = self.parameter_updater(self.get_parameters())
-        self.set_parameters(parameter_update)
-        return parameter_update
+    def calculate_deltas(self) -> Mapping[str, ParameterSet]:
+        return self.parameter_updater.calculate(self.get_parameters())
+
+    def adjust_parameters(
+            self,
+            param_set_maps: Sequence[Mapping[str, ParameterSet]]) -> Mapping[str, ParameterSet]:
+        result = self.parameter_updater.adjust(param_set_maps)
+        self.set_parameters(result)
+        return result
 
     @abstractmethod
     def transform_inputs(self, raw_inputs: np.ndarray) -> np.ndarray: pass
@@ -91,25 +98,25 @@ class QuadraticLayer(Layer):
         return np.transpose(np.matrix(self.inputs))
 
     def __init__(self,
-                 input_size: int,
-                 output_size: int,
+                 input_count: int,
+                 output_count: int,
                  level: int,
                  parameter_updater: ParameterUpdater,
                  parameter_generator: ParameterGenerator = ConstantParameterGenerator()):
-        super().__init__(input_size, output_size, level, parameter_updater)
+        super().__init__(input_count, output_count, level, parameter_updater)
         # Forward pass parameters
-        self.fx_weights = parameter_generator(input_size, output_size)
-        self.fx_biases = parameter_generator(1, output_size)[0]  # Get 1-d array.
-        self.fx = np.zeros(output_size)
-        self.gx_weights = parameter_generator(input_size, output_size)
-        self.gx_biases = parameter_generator(1, output_size)[0]  # Get 1-d array.
-        self.gx = np.zeros(output_size)
+        self.fx_weights = parameter_generator(input_count, output_count)
+        self.fx_biases = parameter_generator(1, output_count)[0]  # Get 1-d array.
+        self.fx = np.zeros(output_count)
+        self.gx_weights = parameter_generator(input_count, output_count)
+        self.gx_biases = parameter_generator(1, output_count)[0]  # Get 1-d array.
+        self.gx = np.zeros(output_count)
 
         # Backward pass parameters
-        self.fx_weight_gradients = np.zeros(input_size)
-        self.fx_bias_gradients = np.zeros(input_size)
-        self.gx_weight_gradients = np.zeros(input_size)
-        self.gx_bias_gradients = np.zeros(input_size)
+        self.fx_weight_gradients = np.zeros(input_count)
+        self.fx_bias_gradients = np.zeros(input_count)
+        self.gx_weight_gradients = np.zeros(input_count)
+        self.gx_bias_gradients = np.zeros(input_count)
 
     def transform_inputs(self, raw_inputs: np.ndarray) -> np.ndarray:
         self.fx = np.matmul(raw_inputs, self.fx_weights) + self.fx_biases

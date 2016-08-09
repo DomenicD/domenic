@@ -18,8 +18,16 @@ class NeuralNetwork:
         self.layers = layers
         self.total_error = 0.0
 
+    @property
+    def input_count(self):
+        return self.layers[0].input_count
+
+    @property
+    def output_count(self):
+        return self.layers[-1].output_count
+
     def adjust_parameters(self) -> Sequence[Mapping[str, ParameterSet]]:
-        return [layer.adjust_parameters() for layer in self.layers]
+        return [layer.calculate_deltas() for layer in self.layers]
 
     def get_parameters(self):
         return [layer.get_parameters() for layer in self.layers]
