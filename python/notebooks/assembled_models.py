@@ -18,8 +18,7 @@ def selective_error_log_updater(total_error_getter: Callable[[], float],
         DeltaParameterUpdateStep(
             ErrorRegularizedParameterDeltaTransform(total_error_getter=total_error_getter)),
         # Log scale the delta by the
-        DeltaParameterUpdateStep(LogarithmicScaleParameterDeltaTransform()),
-        DeltaParameterUpdateStep(FlatScaleParameterDeltaTransform(learning_rate=.1))
+        DeltaParameterUpdateStep(LogarithmicScaleParameterDeltaTransform())
     ])
 
 

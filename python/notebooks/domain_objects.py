@@ -43,14 +43,6 @@ class ParameterSet:
     def __param_value(self, select: Callable[[Parameter], float]) -> np.ndarray:
         return np.reshape(list(map(select, self.parameters)), self.shape)
 
-    def serialize(self):
-        return {
-            "name": self.name,
-            "values": tolist(self.values),
-            "gradients": tolist(self.gradients),
-            "deltas": tolist(self.deltas),
-        }
-
 
 def parameter_set_map(parameter_sets: Iterable[ParameterSet]) -> Mapping[str, ParameterSet]:
     return {ps.name: ps for ps in parameter_sets}

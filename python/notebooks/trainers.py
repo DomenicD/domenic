@@ -1,7 +1,8 @@
 from typing import Callable, Sequence, Tuple
 
-from python.notebooks.networks import NeuralNetwork
 import numpy as np
+
+from python.notebooks.networks import NeuralNetwork
 
 
 class TrainingPlan:
@@ -12,6 +13,24 @@ class TrainingPlan:
         self.acceptable_error = acceptable_error
         self.batch_size = batch_size
         self.parameter_recording_interval = parameter_recording_interval
+
+
+class BatchStepResult:
+    def __init__(self, inputs: Sequence[float], network: NeuralNetwork):
+        self.inputs = inputs
+        self.outputs = network.outputs
+        self.error = network.total_error
+        self.deltas = network.calculate_deltas()
+
+
+class BatchResult:
+    def __init__(self, batch_number: int, network: NeuralNetwork, steps: Sequence[BatchStepResult]):
+        self.batch_number = batch_number
+        self.batch_size = len(steps)
+        self.total_error = sum(map(lambda step_result: step_result.error, steps))
+        self.avg_error = self.total_error / self.batch_size
+        deltas = np.transpose([step.deltas for step in steps])
+        self.parameters = network.adjust_parameters(deltas)
 
 
 # TODO: Create training classes that make training, validation, and testing easy. And that make
@@ -27,24 +46,27 @@ class ClosedFormFunctionTrainer:
         self.training_plan = training_plan
         self.function = function
         self.domain = domain
-        self.total_training_steps = 0
-        self.parameter_record = []
+        self.batch_step_tally = 0
+        self.batch_results = []
 
-    def single_training_step(self):
+    @property
+    def batch_tally(self) -> int:
+        return len(self.batch_results)
+
+    def single_train(self) -> BatchResult:
+        return self.batch_train(1)
+
+    def batch_train(self, batch_size: int = -1) -> BatchResult:
+        if batch_size < 1:
+            batch_size = self.training_plan.batch_size
+        step_results = [self.batch_step() for _ in range(batch_size)]
+        batch_result = BatchResult(self.batch_tally + 1, self.network, step_results)
+        self.batch_results.append(batch_result)
+        return batch_result
+
+    def batch_step(self) -> BatchStepResult:
         inputs = np.random.uniform(self.domain[0], self.domain[1], self.network.input_count)
         self.network.forward_pass(inputs)
         self.network.backward_pass(self.function(inputs))
-        # TODO: Parameter updating is now two steps.
-        # 1) Calculate the deltas
-        # 2) Batch adjust the parameters
-        # I need to update the Trainer design to leverage these two steps
-        # This means that single_training_step is actually a special case of batch_train.
-        # Currently, it is setup as the opposite of this.
-        parameters = self.network.adjust_parameters()
-        if self.total_training_steps % self.training_plan.parameter_recording_interval == 0:
-            self.parameter_record.append(parameters)
-        self.total_training_steps += 1
-
-    def batch_train(self):
-        for i in range(self.training_plan.batch_size):
-            self.single_training_step()
+        self.batch_step_tally += 1
+        return BatchStepResult(inputs, self.network)

@@ -26,8 +26,25 @@ class NeuralNetwork:
     def output_count(self):
         return self.layers[-1].output_count
 
-    def adjust_parameters(self) -> Sequence[Mapping[str, ParameterSet]]:
+    @property
+    def layer_count(self):
+        return len(self.layers)
+
+    @property
+    def outputs(self):
+        return self.layers[-1].outputs
+
+    def calculate_deltas(self) -> Sequence[Mapping[str, ParameterSet]]:
         return [layer.calculate_deltas() for layer in self.layers]
+
+    def adjust_parameters(self, deltas: Sequence[Sequence[Mapping[str, ParameterSet]]]) -> \
+            Sequence[Mapping[str, ParameterSet]]:
+        delta_count = len(deltas)
+        if self.layer_count != delta_count:
+            raise ValueError(
+                "Number of delta sequences ({0}) must equal number of layers ({1})".format(
+                    delta_count, self.layer_count))
+        return [layer.adjust_parameters(delta) for layer, delta in zip(self.layers, deltas)]
 
     def get_parameters(self):
         return [layer.get_parameters() for layer in self.layers]
@@ -51,13 +68,13 @@ class FeedForward(NeuralNetwork):
             inputs = layer.forward_pass(inputs)
 
     def backward_pass(self, expected: Sequence[float]):
-        output = self.layers[-1].outputs
-        self.total_error = sum(self.cost.apply(output, expected))
-        upstream_derivative = np.matrix(self.cost.apply_derivative(output, expected))
+        self.total_error = sum(self.cost.apply(self.outputs, expected))
+        upstream_derivative = np.matrix(self.cost.apply_derivative(self.outputs, expected))
         for layer in reversed(self.layers):
             upstream_derivative = layer.backward_pass(upstream_derivative)
 
 
+# TODO: Legacy code. Need to update to use new pattern.
 class SimpleFeedForward:
     def __init__(self, layers: Sequence[int], activation: Activation, cost: Cost,
                  param_generator: ParameterGenerator = RandomParameterGenerator()):

@@ -1,14 +1,7 @@
-import uuid
-from abc import ABCMeta, abstractmethod
-from typing import List, Union, Sequence, Callable, Any
-import numpy as np
 import collections
+from typing import List, Union, Sequence, Any
 
-
-def tolist(target: Any):
-    if isinstance(target, collections.Iterable) and not isinstance(target, str):
-        return [tolist(item) for item in target]
-    return target
+import numpy as np
 
 
 def same_size(*args: List[Sequence]):

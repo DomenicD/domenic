@@ -4,7 +4,7 @@ from typing import Sequence
 import numpy as np
 
 from python.notebooks.assembled_models import quadratic_feed_forward_network
-from python.notebooks.trainers import ClosedFormFunctionTrainer
+from python.notebooks.trainers import ClosedFormFunctionTrainer, TrainingPlan
 
 
 def simple_polynomial(x_list: Sequence[float]) -> Sequence[float]:
@@ -14,8 +14,12 @@ def simple_polynomial(x_list: Sequence[float]) -> Sequence[float]:
 
 class QuadraticFeedForwardNetworkTest(unittest.TestCase):
     def test_train_model(self):
-        network = quadratic_feed_forward_network([1, 3, 1], param_update_rate=.5)
-        trainer = ClosedFormFunctionTrainer(network, simple_polynomial, (-15, 15))
-        for i in range(1000):
-            trainer.batch_train()
-            print(network.total_error)
+        network = quadratic_feed_forward_network([1, 3, 1], param_update_rate=.75)
+        trainer = ClosedFormFunctionTrainer(network, simple_polynomial, (-15, 15),
+                                            training_plan=TrainingPlan(batch_size=100))
+        last_error = trainer.batch_train().avg_error
+        for i in range(10):
+            current_error = trainer.batch_train().avg_error
+            print("c:", current_error, "d:", last_error - current_error)
+            last_error = current_error
+        print(trainer.batch_results[-1])
