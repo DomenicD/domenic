@@ -2,9 +2,6 @@ from typing import Callable, Iterable, Mapping
 
 import numpy as np
 
-from python.notebooks.utils import tolist
-
-
 class Parameter:
     def __init__(self, set_name: str, index: int, value: float, gradient: float, delta: float):
         self.name = set_name + "_" + str(index)

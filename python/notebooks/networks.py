@@ -8,13 +8,15 @@ from python.notebooks.cost_functions import Cost, QuadraticCost
 from python.notebooks.domain_objects import ParameterSet
 from python.notebooks.layers import Layer
 from python.notebooks.parameter_generators import ParameterGenerator, RandomParameterGenerator
-from python.notebooks.utils import pretty_print, tolist
+from python.notebooks.serializers import tolist
+from python.notebooks.utils import pretty_print
 
 
 class NeuralNetwork:
     __metaclass__ = ABCMeta
 
     def __init__(self, layers: Sequence[Layer]):
+        self.id = str(uuid.uuid4())
         self.layers = layers
         self.total_error = 0.0
 

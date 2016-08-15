@@ -5,8 +5,7 @@ from python.notebooks.networks import FeedForward
 from python.notebooks.parameter_generators import RandomParameterGenerator
 from python.notebooks.parameter_updaters import ParameterUpdater, \
     LargestEffectFilteringParameterUpdateStep, DeltaParameterUpdateStep, \
-    ErrorRegularizedParameterDeltaTransform, LogarithmicScaleParameterDeltaTransform, \
-    FlatScaleParameterDeltaTransform
+    ErrorRegularizedParameterDeltaTransform, LogarithmicScaleParameterDeltaTransform
 
 
 def selective_error_log_updater(total_error_getter: Callable[[], float],

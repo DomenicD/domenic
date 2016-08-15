@@ -1,13 +1,39 @@
-interface FeedForward {
+interface ParameterSet {
+  name: string;
+  dimensionDepth: number,
+  values: number[]|number[][];
+  gradients: number[]|number[][];
+  deltas: number[]|number[][];
+}
+
+interface ParameterSetMap {
+  [key:string]: ParameterSet;
+}
+
+interface NeuralNetwork {
   id: string;
-  biases: number[][];
-  weights: number[][][];
-  inputs: number[][];
-  outputs: number[][];
-  node_errors: number[][];
-  weight_gradients: number[][];
-  bias_gradients: number[][];
-  total_error: number;
+  totalError: number;
+  inputCount: number;
+  outputCount: number;
+  layerCount: number;
+  parameters: ParameterSetMap[];
+}
+
+interface TrainerBatchResult {
+   batchNumber: number;
+   batchSize: number;
+   totalError: number;
+   avgError: number;
+   parameters: ParameterSetMap[];
+}
+
+interface Trainer {
+  id: string;
+  networkId: string;
+  batchSize: number;
+  stepTally: number;
+  batchTally: number;
+  batchResults: TrainerBatchResult[];
 }
 
 function toNumbers(list: Array<number | string>): number[] {
@@ -16,101 +42,142 @@ function toNumbers(list: Array<number | string>): number[] {
 
 function toNumber(value: string | number): number { return Number(value); }
 
-class FeedForwardDomain implements FeedForward {
-  id: string;
-  biases: number[][];
-  weights: number[][][];
-  inputs: number[][];
-  outputs: number[][];
-  node_errors: number[][];
-  weight_gradients: number[][];
-  bias_gradients: number[][];
-  total_error: number;
-
-  constructor(private neuralNetworkApi: NeuralNetworkApi, ff: FeedForward) {
-    this.updateState(ff);
+abstract class DomainObject<T> {
+  constructor(protected neuralNetworkApi: NeuralNetworkApi,
+              protected response: T) {
   }
 
-  forwardPass(inputs: string[] | number[]): ng.IPromise<void> {
-    return this.neuralNetworkApi
-        .updateFeedForward(this.id, FeedForwardCommandEnum.FORWARD_PASS,
-                           toNumbers(inputs))
-        .then(ff => this.updateState(ff));
-  }
-
-  backwardPass(expected: number[]): ng.IPromise<void> {
-    return this.neuralNetworkApi
-        .updateFeedForward(this.id, FeedForwardCommandEnum.BACKWARD_PASS,
-                           toNumbers(expected))
-        .then(ff => this.updateState(ff));
-  }
-
-  adjustWeights(learningRate: number): ng.IPromise<void> {
-    return this.neuralNetworkApi
-        .updateFeedForward(this.id, FeedForwardCommandEnum.ADJUST_WEIGHTS,
-                           toNumber(learningRate))
-        .then(ff => this.updateState(ff));
-  }
-
-  adjustBiases(learningRate: number): ng.IPromise<void> {
-    return this.neuralNetworkApi
-        .updateFeedForward(this.id, FeedForwardCommandEnum.ADJUST_BIASES,
-                           toNumber(learningRate))
-        .then(ff => this.updateState(ff));
-  }
-
-  adjustParameters(learningRate: number): ng.IPromise<void> {
-    return this.neuralNetworkApi
-        .updateFeedForward(this.id, FeedForwardCommandEnum.ADJUST_PARAMETERS,
-                           toNumber(learningRate))
-        .then(ff => this.updateState(ff));
-  }
-
-  private updateState(ff: FeedForward) {
-    this.id = ff.id;
-    this.biases = ff.biases;
-    this.weights = ff.weights;
-    this.inputs = ff.inputs;
-    this.outputs = ff.outputs;
-    this.node_errors = ff.node_errors;
-    this.weight_gradients = ff.weight_gradients;
-    this.bias_gradients = ff.bias_gradients;
-    this.total_error = ff.total_error;
+  protected postRequestProcessing(
+      responsePromise: ng.IPromise<T>): ng.IPromise<void> {
+    return responsePromise.then(response => {
+      this.response = response
+    });
   }
 }
 
-type FeedForwardCommand = 'forward_pass' | 'backward_pass' | 'adjust_weights' |
+class NeuralNetworkDomain extends DomainObject<NeuralNetwork> implements NeuralNetwork {
+  constructor(neuralNetworkApi: NeuralNetworkApi,
+              response: NeuralNetwork) {
+    super(neuralNetworkApi, response);
+  }
+
+  get id(): string {
+    return this.response.id;
+  }
+
+  get totalError(): number {
+    return this.response.totalError;
+  }
+
+  get inputCount(): number {
+    return this.response.inputCount;
+  }
+
+  get outputCount(): number {
+    return this.response.outputCount;
+  }
+
+  get layerCount(): number {
+    return this.response.layerCount;
+  }
+
+  get parameters(): ParameterSetMap[] {
+    return this.response.parameters;
+  }
+
+  forwardPass(inputs: string[] | number[]): ng.IPromise<void> {
+    return this.postRequestProcessing(
+        this.neuralNetworkApi.networkCommand(this.id, "forward_pass", toNumbers(inputs)));
+  }
+
+  backwardPass(expected: number[]): ng.IPromise<void> {
+    return this.postRequestProcessing(
+        this.neuralNetworkApi.networkCommand(this.id, "backward_pass", toNumbers(expected)));
+  }
+}
+
+class TrainerDomain extends DomainObject<Trainer> implements Trainer {
+  constructor(neuralNetworkApi: NeuralNetworkApi, response: Trainer) {
+    super(neuralNetworkApi, response);
+  }
+
+  get id(): string {
+    return this.response.id;
+  }
+
+  get networkId(): string {
+    return this.response.networkId;
+  }
+
+  get batchSize(): number {
+    return this.response.batchSize;
+  }
+
+  get stepTally(): number {
+    return this.response.stepTally;
+  }
+
+  get batchTally(): number {
+    return this.response.batchTally;
+  }
+
+  get batchResults(): TrainerBatchResult[] {
+    return this.response.batchResults;
+  }
+
+  // TODO: Implement Trainer RPC methods.
+}
+
+enum NetworkType {
+  STANDARD_FEED_FORWARD,
+  QUADRATIC_FEED_FORWARD
+}
+
+enum TrainerType {
+  CLOSED_FORM_FUNCTION
+}
+
+type NetworkCommand = 'forward_pass' | 'backward_pass' | 'adjust_weights' |
                           'adjust_biases' | 'adjust_parameters';
 
-const FeedForwardCommandEnum = {
-  get FORWARD_PASS() : FeedForwardCommand{return 'forward_pass'},
-  get BACKWARD_PASS() : FeedForwardCommand{return 'backward_pass'},
-  get ADJUST_WEIGHTS() : FeedForwardCommand{return 'adjust_weights'},
-  get ADJUST_BIASES() : FeedForwardCommand{return 'adjust_biases'},
-  get ADJUST_PARAMETERS() : FeedForwardCommand{return 'adjust_parameters'}
-};
+type TrainerCommand = 'batch_train' | 'single_train';
 
 class NeuralNetworkApi {
 
   constructor(private $http: ng.IHttpService) {}
 
-  createFeedForward(layers: string[] |
-                    number[]): ng.IPromise<FeedForwardDomain> {
-    return this
-        .postRequestProcessing(this.$http.post("/create_feedforward",
-                                               {layers : toNumbers(layers)}))
-        .then(ff => new FeedForwardDomain(this, ff));
+  createNetwork(type: NetworkType,
+                layers: string[]|number[],
+                options: Object): ng.IPromise<NeuralNetworkDomain> {
+    return this.postRequestProcessing(this.$http.post("/create_network",
+            {layers : toNumbers(layers), type: NetworkType[type], options}))
+        .then(result => new NeuralNetworkDomain(this, result));
   }
 
-  getFeedForward(id: string): ng.IPromise<FeedForwardDomain> {
-    return this.postRequestProcessing(this.$http.get(`/get_feedforward/${id}`))
-        .then(ff => new FeedForwardDomain(this, ff));
+  createTrainer(network: NeuralNetwork,
+                type: TrainerType,
+                options: Object): ng.IPromise<string> {
+    return this.postRequestProcessing(this.$http.post("/create_trainer",
+            {networkId: network.id, type: TrainerType[type], options}));
   }
 
-  updateFeedForward(id: string, command: FeedForwardCommand,
-                    ...args: any[]): ng.IPromise<FeedForward> {
+  networkCommand(networkId: string,
+                 command: NetworkCommand,
+                 ...args: any[]): ng.IPromise<NeuralNetwork> {
+    return this.remoteCommand(networkId, command, args);
+  }
+
+  trainerCommand(trainerId: string,
+                 command: TrainerCommand,
+                 ...args: any[]): ng.IPromise<Trainer> {
+    return this.remoteCommand(trainerId, command, args);
+  }
+
+  private remoteCommand(targetId: string,
+                        command: string,
+                    ...args: any[]): ng.IPromise<any> {
     return this.postRequestProcessing(
-        this.$http.post(`/update_feedforward/${id}/${command}`, {args}));
+        this.$http.post(`/remote_command/${targetId}/${command}`, {args}));
   }
 
   private postRequestProcessing(response: ng.IPromise<any>) {
@@ -119,12 +186,12 @@ class NeuralNetworkApi {
 }
 
 class InsightController {
-  private feedForward: FeedForwardDomain;
+  private feedForward: NeuralNetworkDomain;
 
   constructor(private neuralNetworkApi: NeuralNetworkApi) {}
 
   createFeedForward(layers: string[]) {
-    this.neuralNetworkApi.createFeedForward(layers).then(
+    this.neuralNetworkApi.createNetwork(layers).then(
         ff => this.feedForward = ff);
   }
 }
