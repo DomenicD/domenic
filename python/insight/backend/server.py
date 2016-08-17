@@ -18,7 +18,7 @@ def create_network():
 
     if network_type == "QUADRATIC_FEED_FORWARD":
         ff = quadratic_feed_forward_network(
-            layers, param_update_rate=options["param_update_rate"])
+            layers, param_update_rate=options["paramUpdateRate"])
     else:
         raise ValueError(network_type + " is not implemented")
 
@@ -37,7 +37,7 @@ def create_network():
             global_cache[network_id],
             eval(options["function"]),
             options("domain"),
-            options("batch_size"))
+            options("batchSize"))
     else:
         raise ValueError(trainer_type + " is not implemented")
 
@@ -68,6 +68,7 @@ def remote_command(target_id: str, command: str):
 @app.route('/<path:path>', methods=["GET"])
 def static_files(path):
     return send_from_directory('../frontend', path)
+
 
 def create_response(data):
     return Response(json.dumps(data), status=200, mimetype='application/json')
