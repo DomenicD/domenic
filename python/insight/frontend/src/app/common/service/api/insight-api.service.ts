@@ -1,6 +1,13 @@
 import { Injectable } from '@angular/core';
 import {Http, Response} from "@angular/http";
 import {Observable} from "rxjs";
+import {
+  NetworkType, NeuralNetwork, TrainerType, NetworkCommand,
+  TrainerCommand, Trainer
+} from "./insight-api-message";
+import {NeuralNetworkDomain} from "../../domain/neural-network";
+import {toNumbers} from "../../util/parse";
+import {TrainerDomain} from "../../domain/trainer";
 
 @Injectable()
 export class InsightApiService {
@@ -13,7 +20,7 @@ export class InsightApiService {
         .postRequestProcessing(this.http.post(
             "/create_network",
             {layers : toNumbers(layers), type : NetworkType[type], options}))
-        .then(result => new NeuralNetworkDomain(this, result));
+        .map(result => new NeuralNetworkDomain(this, result));
   }
 
   createTrainer(network: NeuralNetwork, type: TrainerType,
@@ -21,7 +28,7 @@ export class InsightApiService {
     return this.postRequestProcessing(this.http.post(
         "/create_trainer",
         {networkId : network.id, type : TrainerType[type], options}))
-        .then(result => new TrainerDomain(this, result));
+        .map(result => new TrainerDomain(this, result));
   }
 
   networkCommand(networkId: string, command: NetworkCommand,
