@@ -1,12 +1,11 @@
-import { Component } from '@angular/core';
+import {Component, ViewEncapsulation} from '@angular/core';
 
 @Component({
   moduleId: module.id,
   selector: 'app-root',
   templateUrl: 'app.component.html',
   styleUrls: ['app.component.css'],
-  directives: [
-  ]
+  encapsulation: ViewEncapsulation.Native
 })
 export class AppComponent {
   title = 'app works!';

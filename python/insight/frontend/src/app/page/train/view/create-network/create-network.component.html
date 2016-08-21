@@ -1,8 +1,9 @@
-<div layout="column">
+<div class="app-create-network">
   <paper-dropdown-menu label="Network type">
     <paper-listbox class="dropdown-content" [(selected)]="networkTypeIndex">
       <paper-item *ngFor="let item of networkTypes">{{item}}</paper-item>
     </paper-listbox>
   </paper-dropdown-menu>
-  <paper-input label="Layers" [value]="layers"></paper-input>
+  <paper-input label="Layers" [(value)]="layers"></paper-input>
+
 </div>
