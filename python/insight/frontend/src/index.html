@@ -19,11 +19,17 @@
     {{#each scripts.polyfills}}
     <script src="{{.}}"></script>
     {{/each}}
+
+    <script src="bower_components/webcomponentsjs/webcomponents-lite.min.js"></script>
+    <link rel="import" href="elements.html">
+
     <script>
+    document.addEventListener('WebComponentsReady', function() {
       System.import('system-config.js').then(function () {
         System.import('main');
       }).catch(console.error.bind(console));
-    </script>
+    });
+  </script>
 
 </body>
 </html>

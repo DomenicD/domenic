@@ -1,0 +1,22 @@
+{
+  "name": "insight-frontend",
+  "description": "Frontend for visualize neural network training",
+  "main": "",
+  "authors": [
+    "Domenic Donato <info@domenicdonato.com>"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/DomenicD/domenic",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests",
+    "public/bower_components"
+  ],
+  "dependencies": {
+    "paper-elements": "^1.0.7"
+  }
+}

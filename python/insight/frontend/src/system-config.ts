@@ -9,7 +9,8 @@
  **********************************************************************************************/
 /** Map relative paths to URLs. */
 const map: any = {
-  '@angular2-material': 'vendor/@angular2-material'
+  '@angular2-material': 'vendor/@angular2-material',
+  '@vaadin': 'vendor/@vaadin'
 };
 
 const materialComponents = [
@@ -35,7 +36,9 @@ const materialComponents = [
 ];
 
 
-let packages = {};
+let packages = {
+  '@vaadin/angular2-polymer': { main: 'index.js', defaultExtension: 'js' }
+};
 materialComponents.forEach(name => {
   packages[`@angular2-material/${name}`] = {
     format: 'cjs',
@@ -66,6 +69,7 @@ const barrels: string[] = [
   'app',
   'app/shared',
   'app/page/train/train',
+  'app/page/train/view/create-network',
   /** @cli-barrel */
 ];
 
