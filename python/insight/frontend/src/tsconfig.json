@@ -13,7 +13,8 @@
     "rootDir": ".",
     "sourceMap": true,
     "target": "es6",
-    "inlineSources": true
+    "inlineSources": true,
+    "strictNullChecks": true
   },
 
   "files": [

@@ -27,7 +27,7 @@ def create_network():
 
 
 @app.route('/create_trainer', methods=["POST"])
-def create_network():
+def create_trainer():
     network_id = request.json["networkId"]
     trainer_type = request.json["type"]
     options = request.json["options"]

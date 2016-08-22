@@ -8,7 +8,6 @@ from python.notebooks.cost_functions import Cost, QuadraticCost
 from python.notebooks.domain_objects import ParameterSet
 from python.notebooks.layers import Layer
 from python.notebooks.parameter_generators import ParameterGenerator, RandomParameterGenerator
-from python.notebooks.serializers import tolist
 from python.notebooks.utils import pretty_print
 
 
@@ -177,16 +176,3 @@ class SimpleFeedForward:
 
     def print_bias_gradients(self):
         pretty_print("bias_gradients", self.bias_gradients)
-
-    def to_web_safe_object(self):
-        return {
-            "id": self.id,
-            "biases": tolist(self.biases),
-            "weights": tolist(self.weights),
-            "inputs": tolist(self.inputs),
-            "outputs": tolist(self.outputs),
-            "node_errors": tolist(self.node_errors),
-            "weight_gradients": tolist(self.weight_gradients),
-            "bias_gradients": tolist(self.bias_gradients),
-            "total_error": self.total_error
-        }

@@ -70,6 +70,7 @@ const barrels: string[] = [
   'app/shared',
   'app/page/train/train',
   'app/page/train/view/create-network',
+  'app/page/train/view/create-trainer',
   /** @cli-barrel */
 ];
 

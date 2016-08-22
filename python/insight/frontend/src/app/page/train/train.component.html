@@ -1,6 +1,15 @@
 <div class="app-train">
-  <div class="create-network">
-    <app-create-network></app-create-network>
+  <div class="creation-wizard" *ngIf="!hasTrainer">
+
+    <app-create-network *ngIf="!hasNeuralNetwork"
+                          (onCreated)="onNetworkCreated($event)"></app-create-network>
+
+      <add-create-trainer *ngIf="hasNeuralNetwork"
+                          [network]="neuralNetwork"
+                          (onCreated)="onTrainerCreated($event)"></add-create-trainer>
   </div>
 
+  <div class="dashboard">
+
+  </div>
 </div>
