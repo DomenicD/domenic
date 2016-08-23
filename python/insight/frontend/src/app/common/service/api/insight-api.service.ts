@@ -1,33 +1,39 @@
-import { Injectable } from '@angular/core';
+import {Injectable, Inject} from '@angular/core';
 import {Http, Response} from "@angular/http";
 import {Observable} from "rxjs";
 import {
-  NetworkType, NeuralNetwork, TrainerType, NetworkCommand,
-  TrainerCommand, Trainer
+  NetworkType,
+  NeuralNetwork,
+  TrainerType,
+  NetworkCommand,
+  TrainerCommand,
+  Trainer
 } from "./insight-api-message";
 import {NeuralNetworkDomain} from "../../domain/neural-network";
 import {toNumbers} from "../../util/parse";
 import {TrainerDomain} from "../../domain/trainer";
+import {ApiUrl} from "../../../app.annotations";
 
 @Injectable()
 export class InsightApiService {
 
-  constructor(private http: Http) {}
+  constructor(@Inject(ApiUrl) private apiUrl: string, private http: Http) {}
 
   createNetwork(layers: string[] | number[], type: NetworkType,
                 options: Object): Observable<NeuralNetworkDomain> {
     return this
         .postRequestProcessing(this.http.post(
-            "/create_network",
+            `${this.apiUrl}/create_network`,
             {layers : toNumbers(layers), type : NetworkType[type], options}))
         .map(result => new NeuralNetworkDomain(this, result));
   }
 
   createTrainer(network: NeuralNetwork, type: TrainerType,
                 options: Object): Observable<TrainerDomain> {
-    return this.postRequestProcessing(this.http.post(
-        "/create_trainer",
-        {networkId : network.id, type : TrainerType[type], options}))
+    return this
+        .postRequestProcessing(this.http.post(
+            `${this.apiUrl}/create_trainer`,
+            {networkId : network.id, type : TrainerType[type], options}))
         .map(result => new TrainerDomain(this, result));
   }
 
@@ -42,13 +48,12 @@ export class InsightApiService {
   }
 
   private remoteCommand<T>(targetId: string, command: string,
-                        ...args: any[]): Observable<T> {
+                           ...args: any[]): Observable<T> {
     return this.postRequestProcessing(
-        this.http.post(`/remote_command/${targetId}/${command}`, {args}));
+        this.http.post(`${this.apiUrl}/remote_command/${targetId}/${command}`, {args}));
   }
 
   private postRequestProcessing(response: Observable<Response>) {
     return response.map(r => r.json().data);
   }
-
 }

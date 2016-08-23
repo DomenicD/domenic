@@ -17,6 +17,7 @@ def serialize_parameter_set(parameter_set: ParameterSet) -> dict:
     return {
         "name": parameter_set.name,
         "dimensionDepth": len(parameter_set.shape),
+        # TODO: Need to convert the numbers as well from numpy to python.
         "values": tolist(parameter_set.values),
         "gradients": tolist(parameter_set.gradients),
         "deltas": tolist(parameter_set.deltas),
@@ -34,7 +35,7 @@ def serialize_neural_network(network: NeuralNetwork):
         "inputCount": network.input_count,
         "outputCount": network.output_count,
         "layerCount": network.layer_count,
-        "outputs": network.outputs,
+        "outputs": tolist(network.outputs),
         "parameters": [serialize_parameter_set_map(param) for param in network.get_parameters()]
     }
 

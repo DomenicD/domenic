@@ -7,7 +7,6 @@ import {CreateTrainerComponent} from "./view/create-trainer/create-trainer.compo
 
 @NgModule({
   imports : [ CommonModule, MdInputModule ],
-  providers : [],
   declarations : [ TrainComponent, CreateNetworkComponent, CreateTrainerComponent ],
   exports : [ TrainComponent ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]

@@ -113,10 +113,10 @@ class QuadraticLayer(Layer):
         self.gx = np.zeros(output_count)
 
         # Backward pass parameters
-        self.fx_weight_gradients = np.zeros(input_count)
-        self.fx_bias_gradients = np.zeros(input_count)
-        self.gx_weight_gradients = np.zeros(input_count)
-        self.gx_bias_gradients = np.zeros(input_count)
+        self.fx_weight_gradients = np.zeros(self.fx_weights.shape)
+        self.fx_bias_gradients = np.zeros(len(self.fx_biases))
+        self.gx_weight_gradients = np.zeros(self.gx_weights.shape)
+        self.gx_bias_gradients = np.zeros(len(self.gx_biases))
 
     def transform_inputs(self, raw_inputs: np.ndarray) -> np.ndarray:
         self.fx = np.matmul(raw_inputs, self.fx_weights) + self.fx_biases

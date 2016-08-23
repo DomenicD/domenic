@@ -1,4 +1,5 @@
 from flask import Flask, send_from_directory, request, Response, json, session
+from flask_cors import CORS
 
 from python.notebooks.assembled_models import quadratic_feed_forward_network
 from python.notebooks.networks import NeuralNetwork
@@ -6,6 +7,7 @@ from python.notebooks.serializers import serialize_trainer, serialize_neural_net
 from python.notebooks.trainers import ClosedFormFunctionTrainer, Trainer
 
 app = Flask(__name__)
+CORS(app)
 
 global_cache = {}
 
