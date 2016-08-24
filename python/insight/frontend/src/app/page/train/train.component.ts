@@ -13,6 +13,8 @@ export class TrainComponent implements OnInit {
 
   neuralNetwork: NeuralNetworkDomain = null;
   trainer: TrainerDomain = null;
+  batchSize: number;
+  isTraining = false;
 
 
   constructor() { }
@@ -35,6 +37,12 @@ export class TrainComponent implements OnInit {
   onNetworkCreated(network: NeuralNetworkDomain) {
     this.neuralNetwork = network;
   }
+
+  runBatch() {
+    this.isTraining = true;
+    this.trainer.batchTrain(this.batchSize).subscribe(_ => _, _ => _, () => this.isTraining = false);
+  }
+
 
 
 }

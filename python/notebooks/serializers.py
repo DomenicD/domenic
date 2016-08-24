@@ -1,5 +1,5 @@
 from typing import Any, Mapping
-
+import numpy as np
 import collections
 
 from python.notebooks.domain_objects import ParameterSet
@@ -10,14 +10,13 @@ from python.notebooks.trainers import BatchResult, Trainer
 def tolist(target: Any):
     if isinstance(target, collections.Iterable) and not isinstance(target, str):
         return [tolist(item) for item in target]
-    return target
+    return target if isinstance(target, str) else np.asscalar(target)
 
 
 def serialize_parameter_set(parameter_set: ParameterSet) -> dict:
     return {
         "name": parameter_set.name,
         "dimensionDepth": len(parameter_set.shape),
-        # TODO: Need to convert the numbers as well from numpy to python.
         "values": tolist(parameter_set.values),
         "gradients": tolist(parameter_set.gradients),
         "deltas": tolist(parameter_set.deltas),

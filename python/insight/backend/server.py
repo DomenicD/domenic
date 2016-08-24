@@ -38,8 +38,8 @@ def create_trainer():
         trainer = ClosedFormFunctionTrainer(
             global_cache[network_id],
             eval(options["function"]),
-            options("domain"),
-            options("batchSize"))
+            options["domain"],
+            options["batchSize"])
     else:
         raise ValueError(trainer_type + " is not implemented")
 

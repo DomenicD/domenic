@@ -26,18 +26,15 @@ import {UiFriendlyEnum} from "../../../../common/domain/ui-friendly-enum";
 export class CreateNetworkComponent implements OnInit {
 
   private isCreating: boolean = false;
-  uiNetworkType: UiFriendlyEnum<NetworkType>;
+  networkType: UiFriendlyEnum<NetworkType> = new UiFriendlyEnum<NetworkType>(NetworkType);
 
   layers: string = "";
-  networkTypes: string[];
-  networkTypeIndex: number;
   paramUpdateRate: number;
 
   @Output() onCreated = new EventEmitter<NeuralNetworkDomain>();
 
-  constructor(private insightApiService: InsightApiService) {
-    this.uiNetworkType = new UiFriendlyEnum<NetworkType>(NetworkType);
-    this.uiNetworkType.value = NetworkType.QUADRATIC_FEED_FORWARD;
+  constructor(private api: InsightApiService) {
+    this.networkType.value = NetworkType.QUADRATIC_FEED_FORWARD;
     this.paramUpdateRate = .5;
   }
 
@@ -61,7 +58,7 @@ export class CreateNetworkComponent implements OnInit {
 
   create() {
     this.isCreating = true;
-    this.insightApiService.createNetwork(this.layers.split(","), this.uiNetworkType.value, {
+    this.api.createNetwork(this.layers.split(","), this.networkType.value, {
       paramUpdateRate: toNumber(this.paramUpdateRate)
     }).subscribe(network => {
       this.onCreated.emit(network)

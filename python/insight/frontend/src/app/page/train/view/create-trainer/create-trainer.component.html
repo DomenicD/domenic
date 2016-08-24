@@ -1,3 +1,29 @@
-<p>
-  create-trainer works!
-</p>
+<paper-card heading="Create Trainer">
+  <div class="card-content">
+    <paper-dropdown-menu label="Trainer type">
+      <paper-listbox class="dropdown-content" [(selected)]="trainerType.index">
+        <paper-item *ngFor="let item of trainerType.displayNames">{{item}}</paper-item>
+      </paper-listbox>
+    </paper-dropdown-menu>
+
+    <paper-input label="Lambda" [(value)]="lambda"></paper-input>
+
+    <paper-input label="Domain min"
+                 [(value)]="domainMin"
+                 type="number"
+                 [max]="domainMax"></paper-input>
+
+    <paper-input label="Domain max"
+                 [(value)]="domainMax" type="number"
+                 [min]="domainMin"></paper-input>
+
+    <paper-input label="Batch size"
+                 [(value)]="batchSize"
+                 type="number"
+                 min="1"></paper-input>
+  </div>
+
+  <div class="card-actions">
+    <paper-button raised [disabled]="isCreateDisabled" (click)="create()">Create</paper-button>
+  </div>
+</paper-card>

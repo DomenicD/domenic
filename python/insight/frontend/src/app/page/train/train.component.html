@@ -4,12 +4,20 @@
     <app-create-network *ngIf="!hasNeuralNetwork"
                           (onCreated)="onNetworkCreated($event)"></app-create-network>
 
-      <add-create-trainer *ngIf="hasNeuralNetwork"
-                          [network]="neuralNetwork"
-                          (onCreated)="onTrainerCreated($event)"></add-create-trainer>
+    <app-create-trainer *ngIf="hasNeuralNetwork"
+                        [network]="neuralNetwork"
+                        (onCreated)="onTrainerCreated($event)"></app-create-trainer>
   </div>
 
-  <div class="dashboard">
+  <div class="dashboard" *ngIf="hasTrainer">
+    <div class="controls">
+      <paper-input label="Batch size"
+                 [(value)]="batchSize"
+                 type="number"
+                 min="1"></paper-input>
 
+      <paper-button raised (click)="runBatch()">Batch</paper-button>
+      <paper-button raised (click)="runSingle()">Single</paper-button>
+    </div>
   </div>
 </div>

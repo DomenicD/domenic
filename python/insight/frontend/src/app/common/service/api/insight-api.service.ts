@@ -54,6 +54,6 @@ export class InsightApiService {
   }
 
   private postRequestProcessing(response: Observable<Response>) {
-    return response.map(r => r.json().data);
+    return response.map(r => r.json());
   }
 }
