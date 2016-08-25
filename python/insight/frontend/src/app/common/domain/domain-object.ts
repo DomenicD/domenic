@@ -6,6 +6,7 @@ export abstract class DomainObject<T> {
 
   protected postRequestProcessing(responsePromise: Observable<T>):
       Observable<this> {
-    return responsePromise.do(response => this.response = response).map(_ => this);
+    return responsePromise.do(response => this.response = response)
+        .map(_ => this);
   }
 }

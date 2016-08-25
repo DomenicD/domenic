@@ -48,7 +48,7 @@ export class InsightApiService {
   }
 
   private remoteCommand<T>(targetId: string, command: string,
-                           ...args: any[]): Observable<T> {
+                           args: any[]): Observable<T> {
     return this.postRequestProcessing(
         this.http.post(`${this.apiUrl}/remote_command/${targetId}/${command}`, {args}));
   }

@@ -1,3 +1,4 @@
+<style include="iron-flex"></style>
 <div class="app-train">
   <div class="creation-wizard" *ngIf="!hasTrainer">
 
@@ -10,14 +11,14 @@
   </div>
 
   <div class="dashboard" *ngIf="hasTrainer">
-    <div class="controls">
-      <paper-input label="Batch size"
-                 [(value)]="batchSize"
-                 type="number"
-                 min="1"></paper-input>
+    <div class="layout horizontal">
+      <paper-input #batchInput
+                   label="Batch size"
+                   type="number"
+                   min="1"></paper-input>
 
-      <paper-button raised (click)="runBatch()">Batch</paper-button>
-      <paper-button raised (click)="runSingle()">Single</paper-button>
+      <paper-button raised (click)="train(batchInput.value)">Batch</paper-button>
+      <paper-button raised (click)="train()">Single</paper-button>
     </div>
   </div>
 </div>

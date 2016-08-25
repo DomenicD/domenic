@@ -45,14 +45,14 @@ class Trainer:
     def batch_train(self, batch_size: int = -1) -> BatchResult:
         if batch_size < 1:
             batch_size = self.batch_size
-        step_results = [self.__batch_step() for _ in range(batch_size)]
+        step_results = [self._batch_step() for _ in range(batch_size)]
         self.step_tally += batch_size
         batch_result = BatchResult(self.batch_tally + 1, self.network, step_results)
         self.batch_results.append(batch_result)
         return batch_result
 
     @abstractmethod
-    def __batch_step(self) -> BatchStepResult: pass
+    def _batch_step(self) -> BatchStepResult: pass
 
 
 class ClosedFormFunctionTrainer(Trainer):
@@ -63,7 +63,7 @@ class ClosedFormFunctionTrainer(Trainer):
         self.function = function
         self.domain = domain
 
-    def __batch_step(self) -> BatchStepResult:
+    def _batch_step(self) -> BatchStepResult:
         inputs = np.random.uniform(self.domain[0], self.domain[1], self.network.input_count)
         self.network.forward_pass(inputs)
         self.network.backward_pass(self.function(inputs))
