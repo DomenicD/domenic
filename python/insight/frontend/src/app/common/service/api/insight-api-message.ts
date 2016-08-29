@@ -14,7 +14,8 @@ export enum TrainerType {
 
 export interface ParameterSet {
   name: string;
-  dimensionDepth: number, values: number[] | number[][];
+  dimensionDepth: number;
+  values: number[] | number[][];
   gradients: number[] | number[][];
   deltas: number[] | number[][];
 }

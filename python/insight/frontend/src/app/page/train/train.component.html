@@ -20,5 +20,23 @@
       <paper-button raised (click)="train(batchInput.value)">Batch</paper-button>
       <paper-button raised (click)="train()">Single</paper-button>
     </div>
+    <div class="layout horizontal">
+      <div *ngFor="let evo of cachedParameterEvolutions">
+        <span>{{evo.name}}</span>
+        <table>
+          <tr>
+            <th>Value</th>
+            <th>Gradient</th>
+            <th>Delta</th>
+          </tr>
+          <tr *ngFor="let dataPoint of evo.dataPoints">
+            <td>{{dataPoint.value}}</td>
+            <td>{{dataPoint.gradient}}</td>
+            <td>{{dataPoint.delta}}</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
   </div>
 </div>
