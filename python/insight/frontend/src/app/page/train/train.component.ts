@@ -8,6 +8,7 @@ import {
   ParameterSetMap
 } from "../../common/service/api/insight-api-message";
 import {Observable} from "rxjs/Rx";
+import {PolymerElement} from "@vaadin/angular2-polymer";
 
 class ParameterDataPoint {
   constructor(public value: number, public gradient: number,
@@ -26,7 +27,9 @@ const noop = _ => _;
   selector : 'app-train',
   templateUrl : 'train.component.html',
   styleUrls : [ 'train.component.css' ],
-  // directives: [nvD3],
+  directives: [
+    PolymerElement('vaadin-grid')
+  ],
   encapsulation : ViewEncapsulation.Native
 })
 export class TrainComponent implements OnInit {
@@ -83,7 +86,7 @@ export class TrainComponent implements OnInit {
                 this.parameterEvolutions.set(name,
                                              new ParameterEvolution(name));
               }
-              this.parameterEvolutions.get(name).dataPoints.push(
+              this.parameterEvolutions.get(name).dataPoints.unshift(
                   new ParameterDataPoint(tuple[0], tuple[1], tuple[2]));
             })
             .subscribe(_ => this.onParameterUpdateCompleted());

@@ -17,6 +17,7 @@
     "public/bower_components"
   ],
   "dependencies": {
-    "paper-elements": "^1.0.7"
+    "paper-elements": "^1.0.7",
+    "vaadin-grid": "^1.1.1"
   }
 }
