@@ -1,11 +1,19 @@
 import {DomainObject} from "./domain-object";
 import {Trainer, TrainerBatchResult} from "../service/api/insight-api-message";
 import {InsightApiService} from "../service/api/insight-api.service";
-import {Observable} from "rxjs";
 import {toNumber} from "../util/parse";
+import {Observer} from "rxjs";
+import {noop} from "rxjs/util/noop";
+import {EventEmitter} from "@angular/core";
+import {NextObserver} from "rxjs/Observer";
 
 export class TrainerDomain extends DomainObject<Trainer> implements Trainer {
-  constructor(insightApi: InsightApiService, response: Trainer) { super(insightApi, response); }
+
+  onBatchResult = new EventEmitter<TrainerBatchResult>();
+
+  constructor(insightApi: InsightApiService, response: Trainer) {
+    super(insightApi, response);
+  }
 
   get id(): string { return this.response.id; }
 
@@ -21,13 +29,21 @@ export class TrainerDomain extends DomainObject<Trainer> implements Trainer {
     return this.response.batchResults;
   }
 
-  singleTrain(): Observable<TrainerDomain> {
+  singleTrain(): Promise<TrainerDomain> {
     return this.postRequestProcessing(
-        this.insightApi.trainerCommand(this.id, "single_train"));
+      this.insightApi.trainerCommand(this.id, "single_train"))
+      .do(_ => this.emitBatchResult())
+      .toPromise();
   }
 
-  batchTrain(batchSize: string | number = -1): Observable<TrainerDomain> {
+  batchTrain(batchSize: string | number = -1): Promise<TrainerDomain> {
     return this.postRequestProcessing(
-        this.insightApi.trainerCommand(this.id, "batch_train", toNumber(batchSize)));
+        this.insightApi.trainerCommand(this.id, "batch_train", toNumber(batchSize)))
+      .do(_ => this.emitBatchResult())
+      .toPromise();
+  }
+
+  private emitBatchResult(): void {
+    this.onBatchResult.emit(this.batchResults.slice(-1)[0]);
   }
 }

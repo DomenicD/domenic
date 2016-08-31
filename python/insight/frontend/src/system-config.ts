@@ -71,6 +71,9 @@ const barrels: string[] = [
   'app/page/train/train',
   'app/page/train/view/create-network',
   'app/page/train/view/create-trainer',
+  'app/page/train/view/controls',
+  'app/page/train/view/summary',
+  'app/page/train/view/details',
   /** @cli-barrel */
 ];
 

@@ -1,0 +1,13 @@
+<paper-card heading="Controls">
+  <div class="card-content">
+    <div class="layout horizontal">
+      <paper-input #batchInput
+                   label="Batch size"
+                   type="number"
+                   min="1"></paper-input>
+
+      <paper-button raised (click)="train(batchInput.value)">Batch</paper-button>
+      <paper-button raised (click)="train()">Single</paper-button>
+    </div>
+  </div>
+</paper-card>
