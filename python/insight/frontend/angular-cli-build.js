@@ -22,7 +22,8 @@ module.exports = function(defaults) {
       'rxjs/**/*.+(js|js.map)',
       '@angular/**/*.+(js|js.map)',
       '@angular2-material/**/*',
-      '@vaadin/**/*.+(js|js.map)'
+      '@vaadin/**/*.+(js|js.map)',
+      'ng2-nvd3/**/*.+(ts|js|js.map)'
     ]
   });
 };
