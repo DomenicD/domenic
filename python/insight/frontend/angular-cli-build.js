@@ -23,7 +23,7 @@ module.exports = function(defaults) {
       '@angular/**/*.+(js|js.map)',
       '@angular2-material/**/*',
       '@vaadin/**/*.+(js|js.map)',
-      'ng2-nvd3/**/*.+(ts|js|js.map)'
+      'angular2-google-chart/**/*.+(ts|js|js.map)'
     ]
   });
 };

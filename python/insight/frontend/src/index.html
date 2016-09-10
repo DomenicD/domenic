@@ -12,7 +12,6 @@
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link href="vendor/@angular2-material/core/overlay/overlay.css" rel="stylesheet">
-  <link href="bower_components\nvd3\build\nv.d3.min.css" rel="stylesheet">
 
 </head>
 <body>
@@ -23,7 +22,8 @@
     {{/each}}
 
     <script src="bower_components/webcomponentsjs/webcomponents-lite.min.js"></script>
-
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
+    <script> var googleLoaded = false;</script>
   <script>
     /* this script must run before Polymer is imported */
     window.Polymer = { dom: 'shadow' };

@@ -1,6 +1,9 @@
 @import "../../../../../style/flex";
 
-.grid-container {
+.details {
+  width: 100%;
+
+  .grid-container {
       width: 100%;
       flex-wrap: wrap;
       .grid {
@@ -13,3 +16,4 @@
         }
       }
     }
+}

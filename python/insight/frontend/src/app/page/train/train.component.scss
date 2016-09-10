@@ -7,9 +7,8 @@
 
   .dashboard {
     width: 100%;
-    \deep\ paper-card > {
+    > * {
       margin-bottom: 30px;
-      width: 100%
     }
   }
 }

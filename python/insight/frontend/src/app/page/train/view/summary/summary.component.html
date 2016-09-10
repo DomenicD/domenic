@@ -1,12 +1,9 @@
-<paper-card heading="Summary">
+<paper-card class="summary" heading="Summary">
   <div class="card-content">
-    <div>
-      <div>
-        <svg #currentChart></svg>
-      </div>
-      <div>
-        <svg #priorChart></svg>
-      </div>
-    </div>
+    <div GoogleChart
+         id="line-chart"
+         [chartData]="line_ChartData"
+         [chartOptions]= "line_ChartOptions"
+         chartType="LineChart"></div>
   </div>
 </paper-card>
