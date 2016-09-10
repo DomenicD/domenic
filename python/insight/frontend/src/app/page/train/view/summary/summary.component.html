@@ -1,8 +1,12 @@
 <paper-card heading="Summary">
   <div class="card-content">
     <div>
-      <nvd3 [options]="currentBatchChartOptions" [data]="currentBatchChartData"></nvd3>
-      <nvd3 [options]="priorBatchChartOptions" [data]="priorBatchChartData"></nvd3>
+      <div>
+        <svg #currentChart></svg>
+      </div>
+      <div>
+        <svg #priorChart></svg>
+      </div>
     </div>
   </div>
 </paper-card>

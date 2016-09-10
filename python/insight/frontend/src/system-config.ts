@@ -10,7 +10,9 @@
 /** Map relative paths to URLs. */
 const map: any = {
   '@angular2-material': 'vendor/@angular2-material',
-  '@vaadin': 'vendor/@vaadin'
+  '@vaadin': 'vendor/@vaadin',
+  'd3': 'bower_components/d3',
+  'nvd3': 'bower_components/nvd3'
 };
 
 const materialComponents = [
@@ -37,7 +39,9 @@ const materialComponents = [
 
 
 let packages = {
-  '@vaadin/angular2-polymer': { main: 'index.js', defaultExtension: 'js' }
+  '@vaadin/angular2-polymer': { main: 'index.js', defaultExtension: 'js' },
+  'd3': { main: 'd3.js', defaultExtension: 'js' },
+  'nvd3': { main: 'build/nv.d3.js', defaultExtension: 'js' },
 };
 materialComponents.forEach(name => {
   packages[`@angular2-material/${name}`] = {
