@@ -8,8 +8,9 @@ from python.notebooks.networks import NeuralNetwork
 
 
 class BatchStepResult:
-    def __init__(self, inputs: Sequence[float], network: NeuralNetwork):
+    def __init__(self, inputs: Sequence[float], expected: Sequence[float], network: NeuralNetwork):
         self.inputs = inputs
+        self.expected = expected
         self.outputs = network.outputs
         self.error = network.total_error
         self.deltas = network.calculate_deltas()
@@ -23,6 +24,9 @@ class BatchResult:
         self.avg_error = self.total_error / self.batch_size
         deltas = np.transpose([step.deltas for step in steps])
         self.parameters = network.adjust_parameters(deltas)
+        self.inputs = [step.inputs for step in steps]
+        self.expected = [step.expected for step in steps]
+        self.actual = [step.outputs for step in steps]
 
 
 class Trainer:
@@ -66,5 +70,6 @@ class ClosedFormFunctionTrainer(Trainer):
     def _batch_step(self) -> BatchStepResult:
         inputs = np.random.uniform(self.domain[0], self.domain[1], self.network.input_count)
         self.network.forward_pass(inputs)
-        self.network.backward_pass(self.function(inputs))
-        return BatchStepResult(inputs, self.network)
+        expected = self.function(inputs)
+        self.network.backward_pass(expected)
+        return BatchStepResult(inputs, expected, self.network)

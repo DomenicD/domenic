@@ -39,6 +39,9 @@ export interface TrainerBatchResult {
   totalError: number;
   avgError: number;
   parameters: ParameterSetMap[];
+  inputs: number[][];
+  expected: number[][];
+  actual: number[][];
 }
 
 export interface Trainer {

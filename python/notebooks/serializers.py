@@ -45,7 +45,10 @@ def serialize_batch_result(result: BatchResult):
         "batchSize": result.batch_size,
         "totalError": result.total_error,
         "avgError": result.avg_error,
-        "parameters": [serialize_parameter_set_map(param_set) for param_set in result.parameters]
+        "parameters": [serialize_parameter_set_map(param_set) for param_set in result.parameters],
+        "inputs": tolist(result.inputs),
+        "expected": tolist(result.expected),
+        "actual": tolist(result.actual)
     }
 
 
