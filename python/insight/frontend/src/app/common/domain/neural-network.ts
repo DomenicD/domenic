@@ -1,13 +1,10 @@
 import {NeuralNetwork, ParameterSetMap} from "../service/api/insight-api-message";
-import {DomainObject} from "./domain-object";
 import {InsightApiService} from "../service/api/insight-api.service";
 import {toNumbers} from "../util/parse";
 import {Observable} from "rxjs";
 
-export class NeuralNetworkDomain extends DomainObject<NeuralNetwork> implements
-    NeuralNetwork {
-  constructor(insightApi: InsightApiService, response: NeuralNetwork) {
-    super(insightApi, response);
+export class NeuralNetworkDomain implements NeuralNetwork {
+  constructor(private insightApi: InsightApiService, private response: NeuralNetwork) {
   }
 
   get id(): string { return this.response.id; }
@@ -22,13 +19,11 @@ export class NeuralNetworkDomain extends DomainObject<NeuralNetwork> implements
 
   get parameters(): ParameterSetMap[] { return this.response.parameters; }
 
-  forwardPass(inputs: string[] | number[]): Observable<NeuralNetworkDomain> {
-    return this.postRequestProcessing(
-        this.insightApi.networkCommand(this.id, "forward_pass", toNumbers(inputs)));
+  forwardPass(inputs: string[] | number[]): Observable<void> {
+    return this.insightApi.networkCommand<void>(this.id, "forward_pass", toNumbers(inputs));
   }
 
-  backwardPass(expected: number[]): Observable<NeuralNetworkDomain> {
-    return this.postRequestProcessing(
-        this.insightApi.networkCommand(this.id, "backward_pass", toNumbers(expected)));
+  backwardPass(expected: number[]): Observable<void> {
+    return this.insightApi.networkCommand<void>(this.id, "backward_pass", toNumbers(expected));
   }
 }

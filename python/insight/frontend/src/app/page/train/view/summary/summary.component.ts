@@ -1,8 +1,17 @@
 import {
-  Component, OnInit, ViewEncapsulation, Input, ElementRef, ViewChild, AfterViewInit
+  Component,
+  OnInit,
+  ViewEncapsulation,
+  Input,
+  ElementRef,
+  ViewChild,
+  AfterViewInit
 } from '@angular/core';
 import {TrainerDomain} from "../../../../common/domain/trainer";
-import {TrainerBatchResult} from "../../../../common/service/api/insight-api-message";
+import {
+  TrainerBatchResult,
+  TrainerValidationResult
+} from "../../../../common/service/api/insight-api-message";
 import {Subscription} from "rxjs";
 
 export class GoogleChart<T> {
@@ -11,8 +20,8 @@ export class GoogleChart<T> {
 
   constructor(private container: ElementRef, private chartType: string) {
     if (GoogleChart.loadedPromise == null) {
-      google.charts.load('current', {'packages':['corechart', 'gauge']});
-      GoogleChart.loadedPromise = new Promise(function (resolve, reject) {
+      google.charts.load('current', {'packages' : [ 'corechart', 'gauge' ]});
+      GoogleChart.loadedPromise = new Promise(function(resolve, reject) {
         google.charts.setOnLoadCallback(resolve);
       });
     }
@@ -28,6 +37,17 @@ export class GoogleChart<T> {
   }
 }
 
+const BATCH_CHART_OPTIONS: google.visualization.SteppedAreaChartOptions = {
+  title : 'Batch Performance',
+  legend : {position : 'right'}
+};
+
+const VALIDATION_CHART_OPTIONS: google.visualization.LineChartOptions = {
+  title : 'Validation Results',
+  curveType : 'function',
+  legend : {position : 'right'}
+};
+
 @Component({
   moduleId : module.id,
   selector : 'app-summary',
@@ -38,23 +58,13 @@ export class GoogleChart<T> {
 export class SummaryComponent implements OnInit, AfterViewInit {
   private _trainer: TrainerDomain = null;
   private batchResultSubscription: Subscription = null;
-  private currentBatch: google.visualization.DataTable;
-  private priorBatch: google.visualization.DataTable;
-  private currentChart: GoogleChart<google.visualization.LineChartOptions>;
-  private priorChart: GoogleChart<google.visualization.LineChartOptions>;
-  private chartOptions = {
-    title : 'Batch Results',
-    curveType : 'function',
-    legend : {position : 'right'}
-  };
+  private batchChart: GoogleChart<google.visualization.ScatterChartOptions>;
+  private validationChart: GoogleChart<google.visualization.LineChartOptions>;
+  private lastValidationResult: TrainerValidationResult;
 
+  @ViewChild('batchChart') batchChartContainer: ElementRef;
 
-
-  @ViewChild('priorChart')
-  priorChartElement: ElementRef;
-
-  @ViewChild('currentChart')
-  currentChartElement: ElementRef;
+  @ViewChild('validationChart') validationChartContainer: ElementRef;
 
   constructor() {}
 
@@ -75,26 +85,54 @@ export class SummaryComponent implements OnInit, AfterViewInit {
   ngOnInit() {}
 
   ngAfterViewInit(): void {
-    this.currentChart = new GoogleChart(this.currentChartElement, "LineChart");
-    this.priorChart = new GoogleChart(this.priorChartElement, "LineChart");
+    this.batchChart = new GoogleChart(this.batchChartContainer, "ScatterChart");
+    this.validationChart =
+        new GoogleChart(this.validationChartContainer, "LineChart");
   }
 
   private onBatchResult(result: TrainerBatchResult): void {
-    this.priorBatch = this.currentBatch;
-    this.currentBatch = new google.visualization.DataTable();
+    this.updateBatchChart(result);
+    this.trainer.validate().subscribe((result) =>
+                                          this.updateValidationChart(result));
+  }
 
-    this.currentBatch.addColumn('number', 'Input');
-    this.currentBatch.addColumn('number', 'Expected');
-    this.currentBatch.addColumn('number', 'Actual');
+  private updateBatchChart(result: TrainerBatchResult) {
+    let dataTable = new google.visualization.DataTable();
+    dataTable.addColumn('number', 'Input');
+    dataTable.addColumn('number', 'Expected');
+    dataTable.addColumn('number', 'Actual');
+
     let data = [];
     for (let i = 0; i < result.inputs.length; i++) {
-      data.push([result.inputs[i][0], result.expected[i][0], result.actual[i][0]])
+      data.push(
+          [ result.inputs[i][0], result.expected[i][0], result.actual[i][0] ])
     }
-    data.sort((a: [number, number, number], b: [number, number, number]) => a[0] - b[0]);
-    this.currentBatch.addRows(data);
-    this.currentChart.draw(this.currentBatch, this.chartOptions);
-    if (this.priorBatch != null) {
-      this.priorChart.draw(this.priorBatch, this.chartOptions);
+    data.sort((a: number[], b: number[]) => a[0] - b[0]);
+    dataTable.addRows(data);
+    this.batchChart.draw(dataTable, BATCH_CHART_OPTIONS);
+  }
+
+  private updateValidationChart(result: TrainerValidationResult) {
+    let dataTable = new google.visualization.DataTable();
+    dataTable.addColumn('number', 'Input');
+    dataTable.addColumn('number', 'Expected');
+    dataTable.addColumn('number', 'Current');
+    if (this.lastValidationResult != null) {
+      dataTable.addColumn('number', 'Prior');
     }
+
+    let data = [];
+    for (let i = 0; i < result.inputs.length; i++) {
+      var rows =
+          [ result.inputs[i][0], result.expected[i][0], result.actual[i][0] ];
+      if (this.lastValidationResult != null) {
+        rows.push(this.lastValidationResult.actual[i][0]);
+      }
+      data.push(rows)
+    }
+    data.sort((a: number[], b: number[]) => a[0] - b[0]);
+    dataTable.addRows(data);
+    this.validationChart.draw(dataTable, VALIDATION_CHART_OPTIONS);
+    this.lastValidationResult = result;
   }
 }

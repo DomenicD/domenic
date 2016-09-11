@@ -3,7 +3,7 @@ from flask_cors import CORS
 
 from python.notebooks.assembled_models import quadratic_feed_forward_network
 from python.notebooks.networks import NeuralNetwork
-from python.notebooks.serializers import serialize_trainer, serialize_neural_network
+from python.notebooks.serializers import serialize_trainer, serialize_neural_network, serialize
 from python.notebooks.trainers import ClosedFormFunctionTrainer, Trainer
 
 app = Flask(__name__)
@@ -19,13 +19,13 @@ def create_network():
     options = request.json["options"]
 
     if network_type == "QUADRATIC_FEED_FORWARD":
-        ff = quadratic_feed_forward_network(
+        network = quadratic_feed_forward_network(
             layers, param_update_rate=options["paramUpdateRate"])
     else:
         raise ValueError(network_type + " is not implemented")
 
-    global_cache[ff.id] = ff
-    return create_response(serialize(ff))
+    global_cache[network.id] = network
+    return create_response(serialize(network))
 
 
 @app.route('/create_trainer', methods=["POST"])
@@ -47,15 +47,6 @@ def create_trainer():
     return create_response(serialize(trainer))
 
 
-def serialize(target):
-    if isinstance(target, Trainer):
-        return serialize_trainer(target)
-    elif isinstance(target, NeuralNetwork):
-        return serialize_neural_network(target)
-    else:
-        raise ValueError("Serialization not implemented for " + type(target).__name__)
-
-
 @app.route('/remote_command/<target_id>/<command>', methods=["POST"])
 def remote_command(target_id: str, command: str):
     target = global_cache[target_id]
@@ -63,8 +54,7 @@ def remote_command(target_id: str, command: str):
         raise ValueError("No object found with id " + target_id)
 
     args = request.json["args"]
-    getattr(target, command)(*args)
-    return create_response(serialize(target))
+    return create_response(serialize(getattr(target, command)(*args)))
 
 
 @app.route('/<path:path>', methods=["GET"])

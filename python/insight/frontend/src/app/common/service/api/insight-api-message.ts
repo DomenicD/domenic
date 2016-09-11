@@ -1,7 +1,7 @@
 export type NetworkCommand = 'forward_pass' | 'backward_pass' | 'adjust_weights' |
                       'adjust_biases' | 'adjust_parameters';
 
-export type TrainerCommand = 'batch_train' | 'single_train';
+export type TrainerCommand = 'batch_train' | 'single_train' | 'validate';
 
 export enum NetworkType {
   STANDARD_FEED_FORWARD,
@@ -44,12 +44,18 @@ export interface TrainerBatchResult {
   actual: number[][];
 }
 
+export interface TrainerValidationResult {
+  inputs: number[][];
+  expected: number[][];
+  actual: number[][];
+  error: number;
+}
+
 export interface Trainer {
   id: string;
   networkId: string;
   batchSize: number;
   stepTally: number;
   batchTally: number;
-batchResults: TrainerBatchResult[];
 }
 

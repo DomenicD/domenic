@@ -1,19 +1,14 @@
-import {DomainObject} from "./domain-object";
-import {Trainer, TrainerBatchResult} from "../service/api/insight-api-message";
+import {Trainer, TrainerBatchResult, TrainerValidationResult} from "../service/api/insight-api-message";
 import {InsightApiService} from "../service/api/insight-api.service";
 import {toNumber} from "../util/parse";
-import {Observer} from "rxjs";
-import {noop} from "rxjs/util/noop";
 import {EventEmitter} from "@angular/core";
-import {NextObserver} from "rxjs/Observer";
+import {Observable} from "rxjs/observable";
 
-export class TrainerDomain extends DomainObject<Trainer> implements Trainer {
+export class TrainerDomain implements Trainer {
 
   onBatchResult = new EventEmitter<TrainerBatchResult>();
 
-  constructor(insightApi: InsightApiService, response: Trainer) {
-    super(insightApi, response);
-  }
+  constructor(private insightApi: InsightApiService, private response: Trainer) { }
 
   get id(): string { return this.response.id; }
 
@@ -25,25 +20,25 @@ export class TrainerDomain extends DomainObject<Trainer> implements Trainer {
 
   get batchTally(): number { return this.response.batchTally; }
 
-  get batchResults(): TrainerBatchResult[] {
-    return this.response.batchResults;
-  }
-
   singleTrain(): Promise<TrainerDomain> {
-    return this.postRequestProcessing(
-      this.insightApi.trainerCommand(this.id, "single_train"))
-      .do(_ => this.emitBatchResult())
+    return this.insightApi.trainerCommand<TrainerBatchResult>(this.id, "single_train")
+      .do(result => this.emitBatchResult(result))
+      .map(_ => this)
       .toPromise();
   }
 
   batchTrain(batchSize: string | number = -1): Promise<TrainerDomain> {
-    return this.postRequestProcessing(
-        this.insightApi.trainerCommand(this.id, "batch_train", toNumber(batchSize)))
-      .do(_ => this.emitBatchResult())
+    return this.insightApi.trainerCommand<TrainerBatchResult>(this.id, "batch_train", toNumber(batchSize))
+      .do(result => this.emitBatchResult(result))
+      .map(_ => this)
       .toPromise();
   }
 
-  private emitBatchResult(): void {
-    this.onBatchResult.emit(this.batchResults.slice(-1)[0]);
+  validate(): Observable<TrainerValidationResult> {
+    return this.insightApi.trainerCommand<TrainerValidationResult>(this.id, "validate")
+  }
+
+  private emitBatchResult(result: TrainerBatchResult): void {
+    this.onBatchResult.emit(result);
   }
 }

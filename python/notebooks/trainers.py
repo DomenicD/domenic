@@ -1,4 +1,5 @@
 import uuid
+import itertools
 from abc import ABCMeta, abstractmethod
 from typing import Callable, Sequence, Tuple
 
@@ -29,6 +30,14 @@ class BatchResult:
         self.actual = [step.outputs for step in steps]
 
 
+class ValidationResult:
+    def __init__(self, steps: Sequence[BatchStepResult]):
+        self.inputs = [step.inputs for step in steps]
+        self.expected = [step.expected for step in steps]
+        self.actual = [step.outputs for step in steps]
+        self.error = sum(map(lambda step_result: step_result.error, steps))
+
+
 class Trainer:
     __metaclass__ = ABCMeta
 
@@ -37,11 +46,7 @@ class Trainer:
         self.network = network
         self.batch_size = batch_size
         self.step_tally = 0
-        self.batch_results = []
-
-    @property
-    def batch_tally(self) -> int:
-        return len(self.batch_results)
+        self.batch_tally = 0
 
     def single_train(self) -> BatchResult:
         return self.batch_train(1)
@@ -51,12 +56,19 @@ class Trainer:
             batch_size = self.batch_size
         step_results = [self._batch_step() for _ in range(batch_size)]
         self.step_tally += batch_size
-        batch_result = BatchResult(self.batch_tally + 1, self.network, step_results)
-        self.batch_results.append(batch_result)
+        self.batch_tally += 1
+        batch_result = BatchResult(self.batch_tally, self.network, step_results)
         return batch_result
 
+    def validate(self) -> ValidationResult:
+        steps = [self._batch_step(np.array(inputs)) for inputs in self._get_validation_set()]
+        return ValidationResult(steps)
+
     @abstractmethod
-    def _batch_step(self) -> BatchStepResult: pass
+    def _batch_step(self, inputs=None) -> BatchStepResult: pass
+
+    @abstractmethod
+    def _get_validation_set(self) -> Sequence[Sequence[float]]: pass
 
 
 class ClosedFormFunctionTrainer(Trainer):
@@ -67,9 +79,14 @@ class ClosedFormFunctionTrainer(Trainer):
         self.function = function
         self.domain = domain
 
-    def _batch_step(self) -> BatchStepResult:
-        inputs = np.random.uniform(self.domain[0], self.domain[1], self.network.input_count)
+    def _batch_step(self, inputs=None) -> BatchStepResult:
+        if inputs is None:
+            inputs = np.random.uniform(self.domain[0], self.domain[1], self.network.input_count)
         self.network.forward_pass(inputs)
         expected = self.function(inputs)
         self.network.backward_pass(expected)
         return BatchStepResult(inputs, expected, self.network)
+
+    def _get_validation_set(self) -> Sequence[Sequence[float]]:
+        return itertools.product(range(self.domain[0], self.domain[1], 1),
+                                 repeat=self.network.input_count)

@@ -37,14 +37,14 @@ export class InsightApiService {
         .map(result => new TrainerDomain(this, result));
   }
 
-  networkCommand(networkId: string, command: NetworkCommand,
-                 ...args: any[]): Observable<NeuralNetwork> {
-    return this.remoteCommand<NeuralNetwork>(networkId, command, args);
+  networkCommand<T>(networkId: string, command: NetworkCommand,
+                 ...args: any[]): Observable<T> {
+    return this.remoteCommand<T>(networkId, command, args);
   }
 
-  trainerCommand(trainerId: string, command: TrainerCommand,
-                 ...args: any[]): Observable<Trainer> {
-    return this.remoteCommand<Trainer>(trainerId, command, args);
+  trainerCommand<T>(trainerId: string, command: TrainerCommand,
+                 ...args: any[]): Observable<T> {
+    return this.remoteCommand<T>(trainerId, command, args);
   }
 
   private remoteCommand<T>(targetId: string, command: string,
