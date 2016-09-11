@@ -6,8 +6,7 @@ import {
   NeuralNetwork,
   TrainerType,
   NetworkCommand,
-  TrainerCommand,
-  Trainer
+  TrainerCommand
 } from "./insight-api-message";
 import {NeuralNetworkDomain} from "../../domain/neural-network";
 import {toNumbers} from "../../util/parse";

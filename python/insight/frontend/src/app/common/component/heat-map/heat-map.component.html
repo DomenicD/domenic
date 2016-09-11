@@ -1,0 +1,12 @@
+<div>
+  <div>{{heatMap.name}}</div>
+  <table>
+    <tbody>
+    <tr *ngFor="let row of heatMap.scaledValues">
+      <td *ngFor="let value of row">
+        {{value}}
+      </td>
+    </tr>
+    </tbody>
+  </table>
+</div>

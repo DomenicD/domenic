@@ -1,4 +1,4 @@
-import {Component, OnInit, Input, Output, EventEmitter, ViewEncapsulation} from '@angular/core';
+import {Component, OnInit, Input, ViewEncapsulation} from '@angular/core';
 import {PolymerElement} from "@vaadin/angular2-polymer";
 import {TrainerDomain} from "../../../../common/domain/trainer";
 
@@ -17,7 +17,7 @@ import {TrainerDomain} from "../../../../common/domain/trainer";
 export class ControlsComponent implements OnInit {
 
   @Input()
-  trainer: TrainerDomain = null;
+  trainer: TrainerDomain;
   isTraining: boolean = false;
 
   constructor() { }

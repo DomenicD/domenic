@@ -76,6 +76,7 @@ const barrels: string[] = [
   'app/page/train/view/controls',
   'app/page/train/view/summary',
   'app/page/train/view/details',
+  'app/common/component/heat-map',
   /** @cli-barrel */
 ];
 

@@ -1,42 +1,25 @@
 import {Component, OnInit, Input, ViewEncapsulation} from '@angular/core';
-import {ArrayObservable} from "rxjs/observable/ArrayObservable";
-import {Observable, Subscription} from "rxjs/Rx";
-import {
-  ParameterSet,
-  ParameterSetMap,
-  TrainerBatchResult
-} from "../../../../common/service/api/insight-api-message";
+import {Subscription} from "rxjs/Rx";
+import {TrainerBatchResult} from "../../../../common/service/api/insight-api-message";
 import {TrainerDomain} from "../../../../common/domain/trainer";
-import {PolymerElement} from "@vaadin/angular2-polymer";
-
-class ParameterDataPoint {
-  constructor(public value: number, public gradient: number,
-              public delta: number) {}
-}
-
-class ParameterEvolution {
-  dataPoints: ParameterDataPoint[] = [];
-  constructor(public name: string) {}
-}
+import {HeatMap, HeatMapComponent} from "../../../../common/component/heat-map/heat-map.component";
 
 @Component({
   moduleId : module.id,
   selector : 'app-details',
   templateUrl : 'details.component.html',
   styleUrls : [ 'details.component.css' ],
-  directives: [
-    PolymerElement('vaadin-grid')
-  ],
+  directives: [HeatMapComponent],
   encapsulation : ViewEncapsulation.Native
 })
 export class DetailsComponent implements OnInit {
 
-  cachedParameterEvolutions: ParameterEvolution[];
-  parameterEvolutions: Map<string, ParameterEvolution> =
-      new Map<string, ParameterEvolution>();
+  cachedHeatMaps: HeatMap[];
+  heatMaps: Map<string, HeatMap> = new Map<string, HeatMap>();
+  heatMapHistory: number = 10;
 
-  private _trainer: TrainerDomain = null;
-  private batchResultSubscription: Subscription = null;
+  private _trainer: TrainerDomain;
+  private batchResultSubscription: Subscription;
 
   constructor() {}
 
@@ -57,35 +40,38 @@ export class DetailsComponent implements OnInit {
             this.updateParameters(batchResult));
   }
 
-  private paramValues(paramSet: ParameterSet): Observable<number[]> {
-    return Observable.zip(
-        ArrayObservable.create([].concat(...paramSet.values)),
-        ArrayObservable.create([].concat(...paramSet.gradients)),
-        ArrayObservable.create([].concat(...paramSet.deltas)));
-  }
-
   private updateParameters(batchResult: TrainerBatchResult) {
     let paramSetMaps = batchResult.parameters;
     for (let paramSetMap of paramSetMaps) {
       for (let key in paramSetMap) {
         let paramSet = paramSetMap[key];
-        this.paramValues(paramSet)
-            .map((tuple: [ number, number, number ], index: number) => {
-              let name = `${paramSet.name}_${index}`;
-              if (!this.parameterEvolutions.has(name)) {
-                this.parameterEvolutions.set(name,
-                                             new ParameterEvolution(name));
-              }
-              this.parameterEvolutions.get(name).dataPoints.unshift(
-                  new ParameterDataPoint(tuple[0], tuple[1], tuple[2]));
-            })
-            .subscribe(_ => this.onParameterUpdateCompleted());
+        let name = paramSet.name;
+        let deltas = [].concat(...paramSet.deltas);
+        if (!this.heatMaps.has(name)) {
+          this.heatMaps.set(name, new HeatMap(name, this.heatMapHistory, deltas.length));
+        }
+        var heatMap = this.heatMaps.get(name);
+        heatMap.addValues(deltas);
       }
     }
-  }
-
-  private onParameterUpdateCompleted() {
-    this.cachedParameterEvolutions =
-        Array.from(this.parameterEvolutions.values());
+    // Convert the Map to an Array.
+    this.cachedHeatMaps = Array.from(this.heatMaps.values());
+    // Find the global max and min.
+    let max = Number.NEGATIVE_INFINITY;
+    let min = Number.POSITIVE_INFINITY;
+    for (let heatMap of this.cachedHeatMaps) {
+      if (heatMap.groupMax > max) {
+        max = heatMap.groupMax;
+      }
+      if (heatMap.groupMin < min) {
+        min = heatMap.groupMin;
+      }
+    }
+    // Set the global max and min and update the HeatMap.
+    for (let heatMap of this.cachedHeatMaps) {
+      heatMap.globalMax = max;
+      heatMap.globalMin = min;
+      heatMap.update();
+    }
   }
 }

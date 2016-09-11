@@ -15,7 +15,7 @@ import {
 import {Subscription} from "rxjs";
 
 export class GoogleChart<T> {
-  private static loadedPromise: Promise<any> = null;
+  private static loadedPromise: Promise<any>;
   private chart: google.visualization.ChartWrapper;
 
   constructor(private container: ElementRef, private chartType: string) {
@@ -56,8 +56,8 @@ const VALIDATION_CHART_OPTIONS: google.visualization.LineChartOptions = {
   encapsulation : ViewEncapsulation.Native
 })
 export class SummaryComponent implements OnInit, AfterViewInit {
-  private _trainer: TrainerDomain = null;
-  private batchResultSubscription: Subscription = null;
+  private _trainer: TrainerDomain;
+  private batchResultSubscription: Subscription;
   private batchChart: GoogleChart<google.visualization.ScatterChartOptions>;
   private validationChart: GoogleChart<google.visualization.LineChartOptions>;
   private lastValidationResult: TrainerValidationResult;
@@ -102,7 +102,7 @@ export class SummaryComponent implements OnInit, AfterViewInit {
     dataTable.addColumn('number', 'Expected');
     dataTable.addColumn('number', 'Actual');
 
-    let data = [];
+    let data: number[][] = [];
     for (let i = 0; i < result.inputs.length; i++) {
       data.push(
           [ result.inputs[i][0], result.expected[i][0], result.actual[i][0] ])
@@ -121,7 +121,7 @@ export class SummaryComponent implements OnInit, AfterViewInit {
       dataTable.addColumn('number', 'Prior');
     }
 
-    let data = [];
+    let data: number[][] = [];
     for (let i = 0; i < result.inputs.length; i++) {
       var rows =
           [ result.inputs[i][0], result.expected[i][0], result.actual[i][0] ];

@@ -1,32 +1,8 @@
 <paper-card class="details" heading="Details">
   <div class="card-content">
-    <div class="grid-container layout horizontal">
-      <div class="grid layout" *ngFor="let evo of cachedParameterEvolutions">
-        <div class="grid-title">{{evo.name}}</div>
-        <vaadin-grid>
-          <table>
-            <colgroup>
-              <col>
-              <col>
-              <col>
-            </colgroup>
-            <thead>
-            <tr>
-              <td>Value</td>
-              <td>Gradient</td>
-              <td>Delta</td>
-            </tr>
-            </thead>
-            <tbody>
-            <tr *ngFor="let item of evo.dataPoints">
-              <td>{{item.value.toFixed(7)}}</td>
-              <td>{{item.gradient.toFixed(7)}}</td>
-              <td>{{item.delta.toFixed(7)}}</td>
-            </tr>
-            </tbody>
-          </table>
-        </vaadin-grid>
-      </div>
+    <div class="grid-container layout vertical">
+      <app-heat-map *ngFor="let heatMap of cachedHeatMaps"
+                    [heatMap]="heatMap"></app-heat-map>
     </div>
   </div>
 </paper-card>
