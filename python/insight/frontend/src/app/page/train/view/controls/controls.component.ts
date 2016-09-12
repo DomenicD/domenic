@@ -1,5 +1,4 @@
 import {Component, OnInit, Input, ViewEncapsulation} from '@angular/core';
-import {PolymerElement} from "@vaadin/angular2-polymer";
 import {TrainerDomain} from "../../../../common/domain/trainer";
 
 @Component({
@@ -7,11 +6,6 @@ import {TrainerDomain} from "../../../../common/domain/trainer";
   selector: 'app-controls',
   templateUrl: 'controls.component.html',
   styleUrls: ['controls.component.css'],
-  directives: [
-    PolymerElement('paper-card'),
-    PolymerElement('paper-input'),
-    PolymerElement('paper-button')
-  ],
   encapsulation : ViewEncapsulation.Native
 })
 export class ControlsComponent implements OnInit {

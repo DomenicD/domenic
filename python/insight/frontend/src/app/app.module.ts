@@ -8,11 +8,11 @@ import {TrainModule} from "./page/train/train.module";
 import {ApiUrl} from "./app.annotations";
 
 @NgModule({
-  imports : [ BrowserModule, MdMenuModule, MdToolbarModule, MdIconModule, TrainModule ],
-  providers : [
-    {provide: ApiUrl, useValue: "http://localhost:5000"}
-    ],
-  declarations : [ AppComponent ],
+  imports : [
+    BrowserModule, MdMenuModule, MdToolbarModule, MdIconModule, TrainModule
+  ],
+  providers : [ {provide : ApiUrl, useValue : "http://localhost:5000"} ],
+  declarations : [AppComponent],
   exports : [ AppComponent ],
   bootstrap : [ AppComponent ]
 })

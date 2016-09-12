@@ -23,6 +23,10 @@ export class UiFriendlyEnum<T> {
     return this.displayNames[this.index];
   }
 
+  set displayName(name: string) {
+    this.index = this.displayNames.indexOf(name);
+  }
+
   get value(): T {
     return this.tsEnum[this.enumStrings[this.index]] as T;
   }

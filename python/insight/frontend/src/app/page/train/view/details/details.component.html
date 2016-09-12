@@ -1,7 +1,30 @@
 <paper-card class="details" heading="Details">
   <div class="card-content">
-    <div class="grid-container layout vertical">
-      <app-heat-map *ngFor="let hm of cachedHeatMaps" [heatMap]="hm"></app-heat-map>
+    <paper-tabs [(selected)]="tabIndex">
+      <paper-tab *ngFor="let tab of tabs">{{tab}}</paper-tab>
+    </paper-tabs>
+
+    <paper-radio-group *ngIf="isTabActive('Deltas') || isTabActive('Gradients')"
+                       [(selected)]="heatMapMode.displayName">
+      <paper-radio-button *ngFor="let name of heatMapMode.displayNames"
+                          [name]="name">
+        {{name}}
+      </paper-radio-button>
+    </paper-radio-group>
+
+    <div *ngIf="isTabActive('Deltas')" class="grid-container layout vertical">
+      <app-heat-map *ngFor="let heatMap of cachedDeltaHeatMaps"
+                    [heatMap]="heatMap"
+                    [mode]="heatMapMode.value"></app-heat-map>
+    </div>
+
+    <div *ngIf="isTabActive('Gradients')" class="grid-container layout vertical">
+      <app-heat-map *ngFor="let heatMap of cachedGradientHeatMaps"
+                    [heatMap]="heatMap"
+                    [mode]="heatMapMode.value"></app-heat-map>
+    </div>
+
+    <div *ngIf="isTabActive('Weights')" class="grid-container layout vertical">
     </div>
   </div>
 </paper-card>
