@@ -4,6 +4,7 @@ import {NeuralNetworkDomain} from "../../../../common/domain/neural-network";
 import {UiFriendlyEnum} from "../../../../common/domain/ui-friendly-enum";
 import {TrainerType} from "../../../../common/service/api/insight-api-message";
 import {InsightApiService} from "../../../../common/service/api/insight-api.service";
+import {toNumber, toNumbers} from "../../../../common/util/parse";
 
 const LAMBDA_REGEX = /^lambda [a-z,]+: [ a-z0-9*+\-\/]+$/;
 
@@ -41,8 +42,8 @@ export class CreateTrainerComponent implements OnInit {
     this.isCreating = true;
     this.api.createTrainer(this.network, this.trainerType.value, {
       "function": this.lambda,
-      "domain": [this.domainMin, this.domainMax],
-      "batchSize": this.batchSize
+      "domain": toNumbers([this.domainMin, this.domainMax]),
+      "batchSize": toNumber(this.batchSize)
     }).subscribe(trainer => this.onCreated.emit(trainer), e => this.isCreating = false);
   }
 
