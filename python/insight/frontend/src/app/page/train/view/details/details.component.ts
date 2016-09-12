@@ -1,5 +1,5 @@
 import {Component, OnInit, Input, ViewEncapsulation} from '@angular/core';
-import {Subscription} from "rxjs/Rx";
+import {Subscription} from "rxjs";
 import {TrainerBatchResult} from "../../../../common/service/api/insight-api-message";
 import {TrainerDomain} from "../../../../common/domain/trainer";
 import {HeatMap, HeatMapComponent} from "../../../../common/component/heat-map/heat-map.component";
@@ -14,9 +14,9 @@ import {HeatMap, HeatMapComponent} from "../../../../common/component/heat-map/h
 })
 export class DetailsComponent implements OnInit {
 
-  cachedHeatMaps: HeatMap[];
+  cachedHeatMaps: HeatMap[] = [];
   heatMaps: Map<string, HeatMap> = new Map<string, HeatMap>();
-  heatMapHistory: number = 10;
+  heatMapHistory: number = 100;
 
   private _trainer: TrainerDomain;
   private batchResultSubscription: Subscription;
@@ -36,8 +36,7 @@ export class DetailsComponent implements OnInit {
       this.batchResultSubscription.unsubscribe();
     }
     this.batchResultSubscription = this.trainer.onBatchResult.subscribe(
-        (batchResult: TrainerBatchResult) =>
-            this.updateParameters(batchResult));
+        (batchResult: TrainerBatchResult) => this.updateParameters(batchResult));
   }
 
   private updateParameters(batchResult: TrainerBatchResult) {
@@ -48,14 +47,14 @@ export class DetailsComponent implements OnInit {
         let name = paramSet.name;
         let deltas = [].concat(...paramSet.deltas);
         if (!this.heatMaps.has(name)) {
-          this.heatMaps.set(name, new HeatMap(name, this.heatMapHistory, deltas.length));
+          let hm = new HeatMap(name, this.heatMapHistory, deltas.length);
+          this.heatMaps.set(name, hm);
+          this.cachedHeatMaps.push(hm)
         }
-        var heatMap = this.heatMaps.get(name);
+        let heatMap = this.heatMaps.get(name);
         heatMap.addValues(deltas);
       }
     }
-    // Convert the Map to an Array.
-    this.cachedHeatMaps = Array.from(this.heatMaps.values());
     // Find the global max and min.
     let max = Number.NEGATIVE_INFINITY;
     let min = Number.POSITIVE_INFINITY;

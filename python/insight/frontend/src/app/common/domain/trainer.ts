@@ -2,7 +2,7 @@ import {Trainer, TrainerBatchResult, TrainerValidationResult} from "../service/a
 import {InsightApiService} from "../service/api/insight-api.service";
 import {toNumber} from "../util/parse";
 import {EventEmitter} from "@angular/core";
-import {Observable} from "rxjs/observable";
+import {Observable} from "rxjs/Rx";
 
 export class TrainerDomain implements Trainer {
 

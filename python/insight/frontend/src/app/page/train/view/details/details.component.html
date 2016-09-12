@@ -1,8 +1,7 @@
 <paper-card class="details" heading="Details">
   <div class="card-content">
     <div class="grid-container layout vertical">
-      <app-heat-map *ngFor="let heatMap of cachedHeatMaps"
-                    [heatMap]="heatMap"></app-heat-map>
+      <app-heat-map *ngFor="let hm of cachedHeatMaps" [heatMap]="hm"></app-heat-map>
     </div>
   </div>
 </paper-card>

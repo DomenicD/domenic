@@ -1,6 +1,6 @@
 import {Injectable, Inject} from '@angular/core';
 import {Http, Response} from "@angular/http";
-import {Observable} from "rxjs";
+import {Observable} from "rxjs/Rx";
 import {
   NetworkType,
   NeuralNetwork,
@@ -53,6 +53,6 @@ export class InsightApiService {
   }
 
   private postRequestProcessing(response: Observable<Response>) {
-    return response.map(r => r.json());
+    return Observable.from(response.map(r => r.json()));
   }
 }

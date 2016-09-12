@@ -1,12 +1,14 @@
-<div>
+<div class="heat-map">
   <div>{{heatMap.name}}</div>
-  <table>
+  <table class="heat-grid">
     <tbody>
-    <tr *ngFor="let row of heatMap.scaledValues">
-      <td *ngFor="let value of row">
-        {{value}}
-      </td>
-    </tr>
+      <tr *ngFor="let row of heatMap.scaledValues"
+           class="heat-row">
+        <td *ngFor="let value of row"
+            [style.background-color]="getColor(value)"
+            class="heat-cell">
+        </td>
+      </tr>
     </tbody>
   </table>
 </div>

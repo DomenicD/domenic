@@ -1,0 +1,14 @@
+@import "../../../../style/flex";
+
+.heat-map {
+  .heat-grid {
+    width: 100%;
+    .heat-row {
+      .heat-cell {
+        border: solid 1px lightgray;
+        border-collapse: collapse;
+        height: 10px;
+      }
+    }
+  }
+}

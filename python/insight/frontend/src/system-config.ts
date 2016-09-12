@@ -10,8 +10,7 @@
 /** Map relative paths to URLs. */
 const map: any = {
   '@angular2-material': 'vendor/@angular2-material',
-  '@vaadin': 'vendor/@vaadin',
-  'angular2-google-chart': 'vendor/angular2-google-chart'
+  '@vaadin': 'vendor/@vaadin'
 };
 
 const materialComponents = [
@@ -38,8 +37,7 @@ const materialComponents = [
 
 
 let packages = {
-  '@vaadin/angular2-polymer': { main: 'index.js', defaultExtension: 'js' },
-  'angular2-google-chart': { main: 'index.js', defaultExtension: 'js' }
+  '@vaadin/angular2-polymer': { main: 'index.js', defaultExtension: 'js' }
 };
 materialComponents.forEach(name => {
   packages[`@angular2-material/${name}`] = {

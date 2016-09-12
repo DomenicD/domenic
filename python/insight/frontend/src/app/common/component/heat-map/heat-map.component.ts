@@ -30,7 +30,8 @@ export class HeatMap {
   addValues(values: number[]) {
     let rowCount = this.values.length;
     if (values.length != rowCount) {
-      throw new Error(`HeatMap expects ${rowCount} rows, ${values.length} were provided`);
+      throw new Error(
+          `HeatMap expects ${rowCount} rows, ${values.length} were provided`);
     }
     for (let i = 0; i < rowCount; i++) {
       let value = values[i];
@@ -46,7 +47,8 @@ export class HeatMap {
   }
 
   update() {
-    this.scaledValues = this.values.map(row => row.map((value, index) => this.scaleValue(value, index)))
+    this.scaledValues = this.values.map(
+        (row, rowIndex) => row.map(value => this.scaleValue(value, rowIndex)))
   }
 
   private updateGroupMinMax() {
@@ -74,41 +76,44 @@ export class HeatMap {
     let max = 0;
     let min = 0;
     switch (this.mode) {
-      case HeatMapMode.LOCAL:
-        max = this.rowMax.get(rowIndex);
-        min = this.rowMin.get(rowIndex);
-        break;
-      case HeatMapMode.GROUP:
-        max = this.groupMax;
-        min = this.groupMin;
-        break;
-      case HeatMapMode.GLOBAL:
-        max = this.globalMax;
-        min = this.globalMin;
-        break;
-      default:
-        throw new Error(`HeatMapMode ${HeatMapMode[this.mode]} not implemented`);
+    case HeatMapMode.LOCAL:
+      max = this.rowMax.get(rowIndex);
+      min = this.rowMin.get(rowIndex);
+      break;
+    case HeatMapMode.GROUP:
+      max = this.groupMax;
+      min = this.groupMin;
+      break;
+    case HeatMapMode.GLOBAL:
+      max = this.globalMax;
+      min = this.globalMin;
+      break;
+    default:
+      throw new Error(`HeatMapMode ${HeatMapMode[this.mode]} not implemented`);
     }
     let absMax = Math.max(Math.abs(max), Math.abs(min));
-    return absMax > 0 ? value / absMax : 0;
+    let scaled = absMax > 0 ? value / absMax : 0;
+    if (Math.abs(scaled) > 1) {
+      console.error("Scaled should be clamped between 1 and -1");
+    }
+    return scaled;
   }
 }
 
 @Component({
-  moduleId: module.id,
-  selector: 'app-heat-map',
-  templateUrl: 'heat-map.component.html',
-  styleUrls: ['heat-map.component.css'],
+  moduleId : module.id,
+  selector : 'app-heat-map',
+  templateUrl : 'heat-map.component.html',
+  styleUrls : [ 'heat-map.component.css' ],
   encapsulation : ViewEncapsulation.Native
 })
 export class HeatMapComponent implements OnInit {
 
-  @Input()
-  heatMap: HeatMap;
+  @Input() heatMap: HeatMap;
 
   private _mode: HeatMapMode;
 
-  constructor() { }
+  constructor() {}
 
   @Input()
   get mode(): HeatMapMode {
@@ -123,6 +128,10 @@ export class HeatMapComponent implements OnInit {
     }
   }
 
-  ngOnInit() {
+  ngOnInit() {}
+
+  getColor(value: number) {
+    let percent = ((1 - Math.abs(value)) * 100).toFixed(0) + "%";
+    return value > 0 ? `rgb(100%, ${percent}, ${percent})` : `rgb(${percent}, ${percent}, 100%)`;
   }
 }
