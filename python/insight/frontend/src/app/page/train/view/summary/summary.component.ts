@@ -15,19 +15,10 @@ import {
 import {Subscription} from "rxjs";
 
 export class GoogleChart<T> {
-  private static loadedPromise: Promise<any>;
   private chart: google.visualization.ChartWrapper;
 
   constructor(private container: ElementRef, private chartType: string) {
-    if (GoogleChart.loadedPromise == null) {
-      google.charts.load('current', {'packages' : [ 'corechart', 'gauge' ]});
-      GoogleChart.loadedPromise = new Promise(function(resolve, reject) {
-        google.charts.setOnLoadCallback(resolve);
-      });
-    }
-    GoogleChart.loadedPromise.then(() => {
-      this.chart = new google.visualization.ChartWrapper({chartType});
-    });
+    this.chart = new google.visualization.ChartWrapper({chartType});
   }
 
   draw(data: google.visualization.DataTable, options: T) {

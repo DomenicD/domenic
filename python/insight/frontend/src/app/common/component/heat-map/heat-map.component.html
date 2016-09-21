@@ -6,7 +6,8 @@
            class="heat-row">
         <td *ngFor="let value of row"
             [style.background-color]="getColor(value)"
-            class="heat-cell">
+            class="heat-cell"
+            title="{{value}}">
         </td>
       </tr>
     </tbody>

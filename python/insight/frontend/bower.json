@@ -18,7 +18,6 @@
   ],
   "dependencies": {
     "paper-elements": "^1.0.7",
-    "vaadin-grid": "^1.1.1",
-    "google-chart": "^1.1.0"
+    "vaadin-grid": "^1.1.1"
   }
 }
