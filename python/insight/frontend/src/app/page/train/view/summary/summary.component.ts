@@ -13,6 +13,11 @@ import {
   TrainerValidationResult
 } from "../../../../common/service/api/insight-api-message";
 import {Subscription} from "rxjs";
+import {PolymerElement} from "@vaadin/angular2-polymer";
+
+function format(value: number) {
+  return Math.round(value).toLocaleString();
+}
 
 export class GoogleChart<T> {
   private chart: google.visualization.ChartWrapper;
@@ -28,30 +33,40 @@ export class GoogleChart<T> {
   }
 }
 
-const BATCH_CHART_OPTIONS: google.visualization.SteppedAreaChartOptions = {
-  title : 'Batch Performance',
-  legend : {position : 'right'}
-};
+export class BatchSummary {
+  epoch: string;
+  size: string;
+  error: string;
+  delta: string;
+  constructor(batchResult: TrainerBatchResult, lastBatchError: number) {
+    this.epoch = format(batchResult.batchNumber);
+    this.size = format(batchResult.batchSize);
+    this.error = format(batchResult.avgError);
+    this.delta = format(batchResult.avgError - lastBatchError);
+  }
+}
 
-const VALIDATION_CHART_OPTIONS: google.visualization.LineChartOptions = {
-  title : 'Validation Results',
-  curveType : 'function',
-  legend : {position : 'right'}
-};
+const MAX_HISTORY = 500;
 
 @Component({
   moduleId : module.id,
   selector : 'app-summary',
   templateUrl : 'summary.component.html',
   styleUrls : [ 'summary.component.css' ],
-  encapsulation : ViewEncapsulation.Native
+  encapsulation : ViewEncapsulation.Native,
+  directives : [ PolymerElement('vaadin-grid') ]
 })
-export class SummaryComponent implements OnInit, AfterViewInit {
+export class SummaryComponent implements OnInit,
+    AfterViewInit {
   private _trainer: TrainerDomain;
   private batchResultSubscription: Subscription;
   private batchChart: GoogleChart<google.visualization.ScatterChartOptions>;
   private validationChart: GoogleChart<google.visualization.LineChartOptions>;
   private lastValidationResult: TrainerValidationResult;
+
+  batchSummaries: BatchSummary[] = [];
+  batchError: number = 0;
+  validationError: number = 0;
 
   @ViewChild('batchChart') batchChartContainer: ElementRef;
 
@@ -82,9 +97,20 @@ export class SummaryComponent implements OnInit, AfterViewInit {
   }
 
   private onBatchResult(result: TrainerBatchResult): void {
+    this.batchSummaries.unshift(new BatchSummary(result, this.batchError));
+    if (this.batchSummaries.length > MAX_HISTORY) {
+      this.batchSummaries.pop();
+    }
     this.updateBatchChart(result);
+    this.batchError = result.avgError;
+
     this.trainer.validate().subscribe((result) =>
-                                          this.updateValidationChart(result));
+                                          this.onValidationResult(result));
+  }
+
+  private onValidationResult(result: TrainerValidationResult) {
+    this.validationError = result.error;
+    this.updateValidationChart(result);
   }
 
   private updateBatchChart(result: TrainerBatchResult) {
@@ -100,7 +126,7 @@ export class SummaryComponent implements OnInit, AfterViewInit {
     }
     data.sort((a: number[], b: number[]) => a[0] - b[0]);
     dataTable.addRows(data);
-    this.batchChart.draw(dataTable, BATCH_CHART_OPTIONS);
+    this.batchChart.draw(dataTable, this.batchChartOptions(result));
   }
 
   private updateValidationChart(result: TrainerValidationResult) {
@@ -123,7 +149,25 @@ export class SummaryComponent implements OnInit, AfterViewInit {
     }
     data.sort((a: number[], b: number[]) => a[0] - b[0]);
     dataTable.addRows(data);
-    this.validationChart.draw(dataTable, VALIDATION_CHART_OPTIONS);
+    this.validationChart.draw(dataTable, this.validationChartOptions(result));
     this.lastValidationResult = result;
+  }
+
+  private batchChartOptions(result: TrainerBatchResult):
+      google.visualization.ScatterChartOptions {
+    return {
+      title : `Batch (error: ${format(result.avgError)})`,
+      legend : {position : 'right'}
+    };
+  }
+
+  private validationChartOptions(result: TrainerValidationResult):
+      google.visualization.ScatterChartOptions {
+    return {
+      title :
+          `Validation (error: ${format(result.error)})`,
+      curveType : 'function',
+      legend : {position : 'right'}
+    };
   }
 }

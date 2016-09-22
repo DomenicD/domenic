@@ -1,6 +1,29 @@
 <paper-card class="summary" heading="Summary">
-  <div class="card-content layout vertical">
-    <div #validationChart class="google-chart"></div>
-    <div #batchChart class="google-chart"></div>
+  <div class="layout horizontal">
+    <div class="batch-table">
+      <h3>Batch history</h3>
+      <vaadin-grid>
+        <table>
+          <colgroup>
+            <col name="Epoch">
+            <col name="Error">
+            <col name="Delta">
+            <col name="Size">
+          </colgroup>
+          <tbody>
+          <tr *ngFor="let summary of batchSummaries">
+            <td>{{summary.epoch}}</td>
+            <td>{{summary.error}}</td>
+            <td>{{summary.delta}}</td>
+            <td>{{summary.size}}</td>
+          </tr>
+          </tbody>
+        </table>
+      </vaadin-grid>
+    </div>
+    <div class="card-content layout vertical flex-1">
+      <div #validationChart class="google-chart"></div>
+      <div #batchChart class="google-chart"></div>
+    </div>
   </div>
 </paper-card>
