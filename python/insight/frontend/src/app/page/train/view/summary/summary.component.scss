@@ -2,8 +2,13 @@
 
 .summary {
   width: 100%;
-  .batch-table {
-    flex-basis: 500px;
-    margin: 0 0 10px 10px;
+  .card-content {
+    height: 600px;
+    vaadin-grid {
+      flex-basis: 400px;
+    }
+    .flex-spacer {
+      flex-basis: 10px;
+    }
   }
 }

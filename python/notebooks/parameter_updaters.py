@@ -12,6 +12,7 @@ class ParameterUpdateStep:
     def __call__(self, parameters: Sequence[Parameter]) -> Sequence[Parameter]:
         pass
 
+# TODO: Rework this so that the effect of each transform step is recorded.
 
 class ParameterUpdater:
     def __init__(self, steps: Sequence[ParameterUpdateStep]):

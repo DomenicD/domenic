@@ -2,4 +2,13 @@
 
 .controls {
   width: 100%;
+
+  paper-button {
+    margin: 10px;
+  }
+
+  paper-icon-button {
+    margin-top: auto;
+    margin-bottom: auto;
+  }
 }

@@ -1,13 +1,21 @@
 <paper-card class="controls" heading="Controls">
   <div class="card-content">
     <div class="layout horizontal">
-      <paper-input #batchInput
-                   label="Batch size"
-                   type="number"
-                   min="1"></paper-input>
-
-      <paper-button raised (click)="train(batchInput.value)">Batch</paper-button>
       <paper-button raised (click)="train()">Single</paper-button>
+      <paper-input label="Batch size"
+                   type="number"
+                   min="1"
+                   [(value)]="batchSize"></paper-input>
+      <paper-button raised (click)="train()">Batch</paper-button>
+      <paper-icon-button raised
+                         icon="av:play-arrow"
+                         (click)="play()"
+                         [disabled]="!hasValidBatchSize || isPlaying"></paper-icon-button>
+
+      <paper-icon-button raised
+                         icon="av:pause"
+                         (click)="pause()"
+                         [disabled]="!isPlaying"></paper-icon-button>
     </div>
   </div>
 </paper-card>
