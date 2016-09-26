@@ -1,7 +1,7 @@
 import {Component, OnInit, Input, ViewEncapsulation} from '@angular/core';
 import {Subscription} from "rxjs";
 import {
-  TrainerBatchResult
+  TrainerBatchResult, ParameterSetMap, ParameterSet, Delta
 } from "../../../../common/service/api/insight-api-message";
 import {TrainerDomain} from "../../../../common/domain/trainer";
 import {
@@ -73,7 +73,7 @@ export class DetailsComponent implements OnInit {
       for (let key in paramSetMap) {
         let paramSet = paramSetMap[key];
         let name = paramSet.name;
-        let deltas = [].concat(...paramSet.deltas);
+        let deltas = [].concat(...paramSet.deltas).map(d => d.value);
         let gradients = [].concat(...paramSet.gradients);
         let weights = [].concat(...paramSet.values);
 

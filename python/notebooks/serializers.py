@@ -2,7 +2,7 @@ from typing import Any, Mapping
 import numpy as np
 import collections
 
-from python.notebooks.domain_objects import ParameterSet
+from python.notebooks.domain_objects import ParameterSet, DeltaStep, Delta
 from python.notebooks.networks import NeuralNetwork
 from python.notebooks.trainers import BatchResult, Trainer, ValidationResult
 
@@ -12,7 +12,35 @@ serialize_map = {}
 def tolist(target: Any):
     if isinstance(target, collections.Iterable) and not isinstance(target, str):
         return [tolist(item) for item in target]
-    return target if isinstance(target, str) else np.asscalar(target)
+
+    if isinstance(target, (np.float32, np.float64)):
+        return float(target)
+
+    if isinstance(target, (np.int32, np.int64)):
+        return int(target)
+
+    return target
+
+
+def serialize_delta_step(delta_step: DeltaStep):
+    return {
+        "name": delta_step.name,
+        "input": float(delta_step.input_value),
+        "output": float(delta_step.output_value)
+    }
+
+
+serialize_map[DeltaStep] = serialize_delta_step
+
+
+def serialize_delta(delta: Delta):
+    return {
+        "value": delta.value,
+        "steps": [serialize(step) for step in delta.steps]
+    }
+
+
+serialize_map[Delta] = serialize_delta
 
 
 def serialize_parameter_set(parameter_set: ParameterSet) -> dict:
@@ -21,7 +49,8 @@ def serialize_parameter_set(parameter_set: ParameterSet) -> dict:
         "dimensionDepth": len(parameter_set.shape),
         "values": tolist(parameter_set.values),
         "gradients": tolist(parameter_set.gradients),
-        "deltas": tolist(parameter_set.deltas),
+        "deltas": np.reshape([serialize(delta) for delta in parameter_set.deltas.flatten()],
+                             parameter_set.deltas.shape).tolist()
     }
 
 
@@ -29,7 +58,7 @@ serialize_map[ParameterSet] = serialize_parameter_set
 
 
 def _serialize_parameter_set_map(set_map: Mapping[str, ParameterSet]) -> dict:
-    return {key: serialize_parameter_set(value) for key, value in set_map.items()}
+    return {key: serialize(value) for key, value in set_map.items()}
 
 
 def serialize_batch_result(result: BatchResult):

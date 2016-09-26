@@ -12,12 +12,23 @@ export enum TrainerType {
   CLOSED_FORM_FUNCTION
 }
 
+export interface DeltaStep {
+  name: string;
+  input: number;
+  output: number;
+}
+
+export interface Delta {
+  value: number;
+  steps: DeltaStep[];
+}
+
 export interface ParameterSet {
   name: string;
   dimensionDepth: number;
   values: number[] | number[][];
   gradients: number[] | number[][];
-  deltas: number[] | number[][];
+  deltas: Delta[] | Delta[][];
 }
 
 export interface ParameterSetMap {

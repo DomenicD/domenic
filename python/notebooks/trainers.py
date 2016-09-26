@@ -14,7 +14,7 @@ class BatchStepResult:
         self.expected = expected
         self.outputs = network.outputs
         self.error = network.total_error
-        self.deltas = network.calculate_deltas()
+        self.parameters = network.get_parameters()
 
 
 class BatchResult:
@@ -23,8 +23,8 @@ class BatchResult:
         self.batch_size = len(steps)
         self.total_error = sum(map(lambda step_result: step_result.error, steps))
         self.avg_error = self.total_error / self.batch_size
-        deltas = np.transpose([step.deltas for step in steps])
-        self.parameters = network.adjust_parameters(deltas)
+        self.parameters = network.adjust_parameters(
+            np.transpose([step.parameters for step in steps]))
         self.inputs = [step.inputs for step in steps]
         self.expected = [step.expected for step in steps]
         self.actual = [step.outputs for step in steps]

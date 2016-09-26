@@ -2,9 +2,10 @@ import unittest
 
 import numpy as np
 
-from python.notebooks.domain_objects import ParameterSet, parameter_set_map, Parameter
+from python.notebooks.domain_objects import ParameterSet, parameter_set_map, Parameter, Delta
 from python.notebooks.parameter_updaters import ParameterUpdater, \
-    DeltaParameterUpdateStep, ScaledGradientParameterDeltaTransform, ErrorRegularizedParameterDeltaTransform, \
+    DeltaParameterUpdateStep, ScaledGradientParameterDeltaTransform, \
+    ErrorRegularizedParameterDeltaTransform, \
     LogarithmicScaleParameterDeltaTransform, LargestEffectFilteringParameterUpdateStep
 
 
@@ -17,8 +18,7 @@ class ParameterUpdaterTest(unittest.TestCase):
             ParameterSet("param_1", [[1, 1, 1], [1, 1, 1]], [[5, 10, -5], [0, 100, -50]]),
             ParameterSet("param_2", [1, 1, 1], [0, 100, -50])
         ])
-        result_map = updater.calculate(param_map)
-        result_map = updater.adjust([result_map])
+        result_map = updater.adjust([param_map])
         np.testing.assert_allclose(result_map["param_1"].values, [[0.95, 0.9, 1.05], [1., 0., 1.5]])
         np.testing.assert_allclose(result_map["param_2"].values, [1., 0., 1.5])
 
@@ -29,7 +29,7 @@ class DeltaTransformTest(unittest.TestCase):
         transformer = ErrorRegularizedParameterDeltaTransform(
             total_error_getter=lambda: total_error)
 
-        parameter = Parameter("set_a", 1, 4, -10, 0)
+        parameter = Parameter("set_a", 1, 4, -10, Delta())
         result = transformer(parameter)
         self.assertEqual(result, -.5)
 
@@ -39,16 +39,16 @@ class DeltaTransformTest(unittest.TestCase):
 
     def test_logarithmic_scale(self):
         transformer = LogarithmicScaleParameterDeltaTransform()
-        parameter = Parameter("set_a", 1, 4, -10, 0)
+        parameter = Parameter("set_a", 1, 4, -10, Delta())
 
         result = transformer(parameter)
         self.assertEqual(result, 0)
 
-        parameter.delta = -10
+        parameter.delta.value = -10
         result = transformer(parameter)
         self.assertAlmostEqual(result, -2.3979, places=4)
 
-        parameter.delta = 10
+        parameter.delta.value = 10
         result = transformer(parameter)
         self.assertAlmostEqual(result, 2.3979, places=4)
 

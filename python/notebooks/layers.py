@@ -46,9 +46,6 @@ class Layer:
                                                        self.cached_gradient_derivative()))
         return self.cached_derivative
 
-    def calculate_deltas(self) -> Mapping[str, ParameterSet]:
-        return self.parameter_updater.calculate(self.get_parameters())
-
     def adjust_parameters(
             self,
             param_set_maps: Sequence[Mapping[str, ParameterSet]]) -> Mapping[str, ParameterSet]:

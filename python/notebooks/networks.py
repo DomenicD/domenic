@@ -35,17 +35,15 @@ class NeuralNetwork:
     def outputs(self):
         return self.layers[-1].outputs
 
-    def calculate_deltas(self) -> Sequence[Mapping[str, ParameterSet]]:
-        return [layer.calculate_deltas() for layer in self.layers]
-
-    def adjust_parameters(self, deltas: Sequence[Sequence[Mapping[str, ParameterSet]]]) -> \
+    def adjust_parameters(self, parameter_batch: Sequence[Sequence[Mapping[str, ParameterSet]]]) -> \
             Sequence[Mapping[str, ParameterSet]]:
-        delta_count = len(deltas)
-        if self.layer_count != delta_count:
+        batch_count = len(parameter_batch)
+        if self.layer_count != batch_count:
             raise ValueError(
                 "Number of delta sequences ({0}) must equal number of layers ({1})".format(
-                    delta_count, self.layer_count))
-        return [layer.adjust_parameters(delta) for layer, delta in zip(self.layers, deltas)]
+                    batch_count, self.layer_count))
+        return [layer.adjust_parameters(param_set_maps) for layer, param_set_maps in
+                zip(self.layers, parameter_batch)]
 
     def get_parameters(self):
         return [layer.get_parameters() for layer in self.layers]

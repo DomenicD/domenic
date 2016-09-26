@@ -2,8 +2,25 @@ from typing import Callable, Iterable, Mapping
 
 import numpy as np
 
+
+class DeltaStep:
+    def __init__(self, name: str, input_value: float, output_value: float):
+        self.name = name
+        self.input_value = input_value
+        self.output_value = output_value
+
+
+class Delta:
+    def __init__(self):
+        self.value = 0
+        self.steps = []
+
+    def add_step(self, step: DeltaStep):
+        self.steps.append(step)
+
+
 class Parameter:
-    def __init__(self, set_name: str, index: int, value: float, gradient: float, delta: float):
+    def __init__(self, set_name: str, index: int, value: float, gradient: float, delta: Delta):
         self.name = set_name + "_" + str(index)
         self.value = value
         self.gradient = gradient
@@ -19,7 +36,7 @@ class ParameterSet:
         self.shape = values.shape
         self.name = name
 
-        self.parameters = [Parameter(self.name, idx, value, gradient, 0)
+        self.parameters = [Parameter(self.name, idx, value, gradient, Delta())
                            for idx, value, gradient in
                            zip(range(values.size), values.flatten(), gradients.flatten())]
 
