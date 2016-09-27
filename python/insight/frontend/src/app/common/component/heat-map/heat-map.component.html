@@ -1,15 +1,15 @@
 <div class="heat-map">
-  <div>{{heatMap.name}}</div>
-  <table class="heat-grid">
-    <tbody>
-      <tr *ngFor="let row of heatMap.scaledValues"
-           class="heat-row">
-        <td *ngFor="let value of row"
-            [style.background-color]="getColor(value)"
-            class="heat-cell"
-            title="{{value}}">
-        </td>
-      </tr>
-    </tbody>
-  </table>
+  <div *ngFor="let group of heatMap.groups">
+    <div *ngIf="showGroupName">{{group.name}}</div>
+    <div *ngFor="let row of group.rows">
+      <div *ngIf="showRow(row.name)"
+           class="layout horizontal">
+        <div>{{row.name}}</div>
+        <div *ngFor="let cell of row.visibleCells"
+             [style.background-color]="getColor(cell)"
+             title="{{cell.actualValue}}"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
