@@ -7,7 +7,7 @@
         <div>{{row.name}}</div>
         <div *ngFor="let cell of row.visibleCells"
              [style.background-color]="getColor(cell)"
-             title="{{cell.actualValue}}"></div>
+             title="{{cell.actualValue}}">
         </div>
       </div>
     </div>

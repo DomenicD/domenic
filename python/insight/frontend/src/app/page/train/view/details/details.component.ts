@@ -1,8 +1,6 @@
 import {Component, OnInit, Input, ViewEncapsulation} from '@angular/core';
 import {Subscription} from "rxjs";
-import {
-  TrainerBatchResult, ParameterSetMap, ParameterSet, Delta
-} from "../../../../common/service/api/insight-api-message";
+import {TrainerBatchResult} from "../../../../common/service/api/insight-api-message";
 import {TrainerDomain} from "../../../../common/domain/trainer";
 import {
   HeatMap,
@@ -12,7 +10,11 @@ import {
 import {UiFriendlyEnum} from "../../../../common/domain/ui-friendly-enum";
 import {PolymerElement} from "@vaadin/angular2-polymer";
 
-const TABS = [ "Deltas", "Gradients", "Weights" ];
+const TABS = [ "Heat Map", "Graphs" ];
+const DELTA_ROW_NAME = 'd';
+const GRADIENT_ROW_NAME = 'g';
+const WEIGHT_ROW_NAME = 'w';
+const METRIC_NAMES = [ DELTA_ROW_NAME, GRADIENT_ROW_NAME, WEIGHT_ROW_NAME ];
 
 @Component({
   moduleId : module.id,
@@ -25,19 +27,20 @@ const TABS = [ "Deltas", "Gradients", "Weights" ];
     PolymerElement('paper-radio-group'),
     PolymerElement('paper-tabs'),
     PolymerElement('paper-tab'),
+    PolymerElement('paper-checkbox'),
+    PolymerElement('paper-toggle-button'),
   ],
   encapsulation : ViewEncapsulation.Native
 })
 export class DetailsComponent implements OnInit {
 
-  cachedDeltaHeatMaps: HeatMap[] = [];
-  deltaHeatMaps: Map<string, HeatMap> = new Map<string, HeatMap>();
-  cachedGradientHeatMaps: HeatMap[] = [];
-  gradientHeatMaps: Map<string, HeatMap> = new Map<string, HeatMap>();
+  heatMap: HeatMap = new HeatMap();
   heatMapHistory: number = 100;
   tabIndex: number = 0;
   heatMapMode: UiFriendlyEnum<HeatMapMode> =
       new UiFriendlyEnum<HeatMapMode>(HeatMapMode);
+  visibleMetrics: string[] = Array.from(METRIC_NAMES);
+  showLabels: boolean = true;
 
   private _trainer: TrainerDomain;
   private batchResultSubscription: Subscription;
@@ -45,6 +48,8 @@ export class DetailsComponent implements OnInit {
   constructor() {}
 
   ngOnInit() {}
+
+  get metricNames(): string[] { return METRIC_NAMES; }
 
   get tabs(): string[] { return TABS; }
 
@@ -63,6 +68,19 @@ export class DetailsComponent implements OnInit {
             this.updateParameters(batchResult));
   }
 
+  isMetricVisible(metric: string): boolean {
+    return this.visibleMetrics.indexOf(metric) > -1;
+  }
+
+  onMetricVisibilityChanged(metric: string, isVisible: boolean) {
+    let index = this.visibleMetrics.indexOf(metric);
+    if (isVisible && index < 0) {
+      this.visibleMetrics.push(metric);
+    } else if (!isVisible && index < 0) {
+      this.visibleMetrics.splice(index, 1);
+    }
+  }
+
   isTabActive(tab: string): boolean {
     return this.tabs.indexOf(tab) === this.tabIndex;
   }
@@ -77,45 +95,14 @@ export class DetailsComponent implements OnInit {
         let gradients = [].concat(...paramSet.gradients);
         let weights = [].concat(...paramSet.values);
 
-        this.getHeatMapDefault(name, deltas.length, this.deltaHeatMaps,
-                               this.cachedDeltaHeatMaps)
-            .addValues(deltas);
-        this.getHeatMapDefault(name, gradients.length, this.gradientHeatMaps,
-                               this.cachedGradientHeatMaps)
-            .addValues(gradients);
+        for (let i = 0; i < deltas.length; i++) {
+          let groupName = `${name}_${i}`;
+          this.heatMap.getGroup(groupName).getRow(DELTA_ROW_NAME).addValue(deltas[i]);
+          this.heatMap.getGroup(groupName).getRow(GRADIENT_ROW_NAME).addValue(gradients[i]);
+          this.heatMap.getGroup(groupName).getRow(WEIGHT_ROW_NAME).addValue(weights[i]);
+        }
       }
     }
-    this.updateGlobalMaxMin(this.cachedDeltaHeatMaps);
-    this.updateGlobalMaxMin(this.cachedGradientHeatMaps);
-  }
-
-  private updateGlobalMaxMin(heatMaps: HeatMap[]) {
-    // Find the global max and min.
-    let max = Number.NEGATIVE_INFINITY;
-    let min = Number.POSITIVE_INFINITY;
-    for (let heatMap of heatMaps) {
-      if (heatMap.groupMax > max) {
-        max = heatMap.groupMax;
-      }
-      if (heatMap.groupMin < min) {
-        min = heatMap.groupMin;
-      }
-    }
-    // Set the global max and min and update the HeatMap.
-    for (let heatMap of heatMaps) {
-      heatMap.globalMax = max;
-      heatMap.globalMin = min;
-      heatMap.update();
-    }
-  }
-
-  private getHeatMapDefault(name: string, rows: number,
-                            heatMaps: Map<string, HeatMap>, cache: HeatMap[]) {
-    if (!heatMaps.has(name)) {
-      let heatMap = new HeatMap(name, this.heatMapHistory, rows);
-      heatMaps.set(name, heatMap);
-      cache.push(heatMap)
-    }
-    return heatMaps.get(name);
+    this.heatMap.update();
   }
 }

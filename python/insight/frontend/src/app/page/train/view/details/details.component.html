@@ -3,28 +3,40 @@
     <paper-tabs [(selected)]="tabIndex">
       <paper-tab *ngFor="let tab of tabs">{{tab}}</paper-tab>
     </paper-tabs>
+    <div *ngIf="isTabActive('Heat Map')" class="grid-container layout vertical">
 
-    <paper-radio-group *ngIf="isTabActive('Deltas') || isTabActive('Gradients')"
-                       [(selected)]="heatMapMode.displayName">
-      <paper-radio-button *ngFor="let name of heatMapMode.displayNames"
-                          [name]="name">
-        {{name}}
-      </paper-radio-button>
-    </paper-radio-group>
+      <div class="controls layout horizontal">
+        <div>
+          <div>Relativity</div>
+          <paper-radio-group class="layout vertical"
+                             [(selected)]="heatMapMode.displayName">
+            <paper-radio-button *ngFor="let name of heatMapMode.displayNames"
+                                [name]="name">
+              {{name}}
+            </paper-radio-button>
+          </paper-radio-group>
+        </div>
 
-    <div *ngIf="isTabActive('Deltas')" class="grid-container layout vertical">
-      <app-heat-map *ngFor="let heatMap of cachedDeltaHeatMaps"
-                    [heatMap]="heatMap"
-                    [mode]="heatMapMode.value"></app-heat-map>
+        <div>
+          <div>Metrics</div>
+          <div class="layout vertical">
+            <paper-checkbox *ngFor="let metric of metricNames"
+                            [checked]="isMetricVisible(metric)"
+                            (change)="onMetricVisibilityChanged(metric, $event.target.checked)">
+              {{metric}}
+            </paper-checkbox>
+          </div>
+        </div>
+
+        <paper-toggle-button [(checked)]="showLabels">Show labels</paper-toggle-button>
+
+      </div>
+      <app-heat-map [heatMap]="heatMap"
+                    [mode]="heatMapMode.value"
+                    [visibleRows]="visibleMetrics"></app-heat-map>
     </div>
 
-    <div *ngIf="isTabActive('Gradients')" class="grid-container layout vertical">
-      <app-heat-map *ngFor="let heatMap of cachedGradientHeatMaps"
-                    [heatMap]="heatMap"
-                    [mode]="heatMapMode.value"></app-heat-map>
-    </div>
-
-    <div *ngIf="isTabActive('Weights')" class="grid-container layout vertical">
+    <div *ngIf="isTabActive('Graphs')" class="grid-container layout vertical">
     </div>
   </div>
 </paper-card>

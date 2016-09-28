@@ -1,4 +1,5 @@
 import {Component, OnInit, ViewEncapsulation, Input} from '@angular/core';
+import {getDefault} from "../../util/collection";
 
 export enum HeatMapMode {
   LOCAL,
@@ -27,13 +28,14 @@ export class HeatMapRow {
 
   constructor(public name: string) {}
 
-  add(value: number) {
+  addValue(value: number) {
     this.cells.unshift(new HeatMapCell(value));
-    let removed: number;
     if (this.cells.length > this.history) {
-      removed = this.cells[this.history].actualValue;
+      this.updateLocalMinMax(value,
+        this.cells[this.history].actualValue);
+    } else {
+      this.updateLocalMinMax(value);
     }
-    this.updateLocalMinMax(value, removed);
   }
 
   update() {
@@ -43,15 +45,15 @@ export class HeatMapRow {
     }
   }
 
-  private updateLocalMinMax(value: number, removed: number) {
+  private updateLocalMinMax(value: number, removed?: number) {
     if (removed == this.localMax) {
-      this.localMax = Math.max(...this.cells);
+      this.localMax = Math.max(...this.cells.map(c => c.actualValue));
     } else if (value > this.localMax) {
       this.localMax = value;
     }
 
     if (removed == this.localMin) {
-      this.localMin = Math.min(...this.cells);
+      this.localMin = Math.min(...this.cells.map(c => c.actualValue));
     } else if (value < this.localMin) {
       this.localMin = value;
     }
@@ -84,19 +86,13 @@ export class HeatMapRow {
 export class HeatMapGroup {
   private _history: number = DEFAULT_HISTORY;
   private _mode: HeatMapMode = DEFAULT_MODE;
-  private rowMap: Map<string, HeatMapRow>;
 
-  constructor(public name: string, public rows: HeatMapRow[]) {
-    this.rowMap = new Map<string, HeatMapRow>();
-    for (let row of rows) {
-      this.rowMap.set(row.name, row);
-    }
-  }
+  constructor(public name: string, public rows: HeatMapRow[] = []) { }
 
   get history(): number { return this._history; }
 
   set history(value: number) {
-    for (let row of this.rowMap.values()) {
+    for (let row of this.rows) {
       row.history = value;
     }
     this._history = value;
@@ -105,21 +101,28 @@ export class HeatMapGroup {
   get mode(): HeatMapMode { return this._mode; }
 
   set mode(value: HeatMapMode) {
-    for (let row of this.rowMap.values()) {
+    for (let row of this.rows) {
       row.mode = value;
     }
     this._mode = value;
   }
 
-  add(rowName: string, value: number) { this.rowMap.get(rowName).add(value); }
+  getRow(rowName: string): HeatMapRow {
+    let row = this.rows.find(r => r.name === rowName);
+    if (row == null) {
+      row = new HeatMapRow(rowName);
+      this.rows.push(row);
+    }
+    return row;
+  }
 
   setGlobalExtrema(rowKey: string, min: number, max: number) {
-    this.rowMap.get(rowKey).globalMin = min;
-    this.rowMap.get(rowKey).globalMax = max;
+    this.getRow(rowKey).globalMin = min;
+    this.getRow(rowKey).globalMax = max;
   }
 
   update() {
-    for (let row of this.rowMap.values()) {
+    for (let row of this.rows) {
       row.update();
     }
   }
@@ -129,19 +132,12 @@ export class HeatMap {
   private _history: number = DEFAULT_HISTORY;
   private _mode: HeatMapMode = DEFAULT_MODE;
 
-  groupMap: Map<string, HeatMapGroup>;
-
-  constructor(public groups: HeatMapGroup[]) {
-    this.groupMap = new Map<string, HeatMapGroup>();
-    for (let group of groups) {
-      this.groupMap.set(group.name, group);
-    }
-  }
+  constructor(public groups: HeatMapGroup[] = []) { }
 
   get history(): number { return this._history; }
 
   set history(value: number) {
-    for (let group of this.groupMap.values()) {
+    for (let group of this.groups) {
       group.history = value;
     }
     this._history = value;
@@ -150,24 +146,47 @@ export class HeatMap {
   get mode(): HeatMapMode { return this._mode; }
 
   set mode(value: HeatMapMode) {
-    for (let group of this.groupMap.values()) {
+    for (let group of this.groups) {
       group.mode = value;
     }
     this._mode = value;
   }
 
-  add(groupName: string, rowName: string, value: number) {
-    this.groupMap.get(groupName).add(rowName, value);
-  }
-
-  setGlobalExtrema(rowName: string, min: number, max: number) {
-    for (let group of this.groupMap.values()) {
-      group.setGlobalExtrema(rowName, min, max);
+  getGroup(groupName: string): HeatMapGroup {
+    let group = this.groups.find(r => r.name === groupName);
+    if (group == null) {
+      group = new HeatMapGroup(groupName);
+      this.groups.push(group);
     }
+    return group;
   }
 
   update() {
-    for (let group of this.groupMap.values()) {
+    let maxes = new Map<string, number>();
+    let mins = new Map<string, number>();
+
+    // Find the global min and max for each row type.
+    for (let group of this.groups) {
+      for (let row of group.rows) {
+        let rowName = row.name;
+        let max = getDefault(maxes, rowName, Number.NEGATIVE_INFINITY);
+        let min = getDefault(mins, rowName, Number.POSITIVE_INFINITY);
+        if (row.localMax > max) {
+          maxes.set(rowName, row.localMax);
+        }
+        if (row.localMin < min) {
+          mins.set(rowName, row.localMin);
+        }
+      }
+    }
+
+    // Set the global min and max for each row type.
+    for (let group of this.groups) {
+      for (let row of group.rows) {
+        row.globalMax = maxes.get(row.name);
+        row.globalMin = mins.get(row.name);
+      }
+      // Have the group perform its update now that all its rows have been updated.
       group.update();
     }
   }
@@ -218,7 +237,9 @@ export class HeatMapComponent implements OnInit {
 
   ngOnInit() {}
 
-  showRow(name: string): boolean { return this.visibleRows.indexOf(name) > -1; }
+  showRow(name: string): boolean {
+    return this.visibleRows.indexOf(name) > -1;
+  }
 
   getColor(value: number) {
     let percent = ((1 - Math.abs(value)) * 100).toFixed(0) + "%";
