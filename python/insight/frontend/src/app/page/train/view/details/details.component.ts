@@ -42,6 +42,7 @@ export class DetailsComponent implements OnInit {
   visibleMetrics: string[] = Array.from(METRIC_NAMES);
   showParameterNames: boolean = true;
   showParameterDivider: boolean = false;
+  useLogScale: boolean = false;
 
   private _trainer: TrainerDomain;
   private batchResultSubscription: Subscription;

@@ -28,9 +28,10 @@
           </div>
         </div>
         <div>
-          <div class="control-label">Labels</div>
+          <div class="control-label">Visuals</div>
           <paper-toggle-button [(checked)]="showParameterNames">Parameter names</paper-toggle-button>
           <paper-toggle-button [(checked)]="showParameterDivider">Parameter divider</paper-toggle-button>
+          <paper-toggle-button [(checked)]="useLogScale">Log scale</paper-toggle-button>
         </div>
 
 
@@ -39,7 +40,8 @@
                     [mode]="heatMapMode.value"
                     [visibleRows]="visibleMetrics"
                     [showGroupName]="showParameterNames"
-                    [showGroupDivider]="showParameterDivider"></app-heat-map>
+                    [showGroupDivider]="showParameterDivider"
+                    [useLogScale]="useLogScale"></app-heat-map>
     </div>
 
     <div *ngIf="isTabActive('Graphs')" class="grid-container layout vertical">

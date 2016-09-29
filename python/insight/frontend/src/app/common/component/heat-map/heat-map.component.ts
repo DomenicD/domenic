@@ -8,7 +8,7 @@ export enum HeatMapMode {
 
 const DEFAULT_HISTORY = 100;
 const DEFAULT_MODE = HeatMapMode.LOCAL;
-const DEFAULT_USE_LOG_SCALE = true;
+const DEFAULT_USE_LOG_SCALE = false;
 
 export class HeatMapCell {
   relativeValue: number = 0;
@@ -23,6 +23,7 @@ export class HeatMapRow {
   localMax: number = 0;
   localMin: number = 0;
   mode: HeatMapMode = DEFAULT_MODE;
+  useLogScale: boolean = DEFAULT_USE_LOG_SCALE;
   visibleCells: HeatMapCell[] = [];
 
   private cells: HeatMapCell[] = [];
@@ -32,8 +33,7 @@ export class HeatMapRow {
   addValue(value: number) {
     this.cells.unshift(new HeatMapCell(value));
     if (this.cells.length > this.history) {
-      this.updateLocalMinMax(value,
-        this.cells[this.history].actualValue);
+      this.updateLocalMinMax(value, this.cells[this.history].actualValue);
     } else {
       this.updateLocalMinMax(value);
     }
@@ -76,19 +76,29 @@ export class HeatMapRow {
       throw new Error(`HeatMapMode ${HeatMapMode[this.mode]} not implemented`);
     }
     let absMax = Math.max(Math.abs(max), Math.abs(min));
+    if (this.useLogScale) {
+      absMax = this.logScale(absMax);
+      let logValue = this.logScale(value);
+      value = value < 0 ? -logValue : logValue;
+    }
     let scaled = absMax > 0 ? value / absMax : 0;
     if (Math.abs(scaled) > 1) {
       console.error("Scaled should be clamped between 1 and -1");
     }
     return scaled;
   }
+
+  private logScale(value: number): number {
+    return Math.log(1 + Math.abs(value));
+  }
 }
 
 export class HeatMapGroup {
   private _history: number = DEFAULT_HISTORY;
   private _mode: HeatMapMode = DEFAULT_MODE;
+  private _useLogScale: boolean = DEFAULT_USE_LOG_SCALE;
 
-  constructor(public name: string, public rows: HeatMapRow[] = []) { }
+  constructor(public name: string, public rows: HeatMapRow[] = []) {}
 
   get history(): number { return this._history; }
 
@@ -106,6 +116,15 @@ export class HeatMapGroup {
       row.mode = value;
     }
     this._mode = value;
+  }
+
+  get useLogScale(): boolean { return this._useLogScale; }
+
+  set useLogScale(value: boolean) {
+    for (let row of this.rows) {
+      row.useLogScale = value;
+    }
+    this._useLogScale = value;
   }
 
   getRow(rowName: string): HeatMapRow {
@@ -132,11 +151,9 @@ export class HeatMapGroup {
 export class HeatMap {
   private _history: number = DEFAULT_HISTORY;
   private _mode: HeatMapMode = DEFAULT_MODE;
-  // TODO: Implement a log scale to see if it makes gradient heat map more useful
-  // Maybe mark a particular row, but first just apply to everything to see what happens.
   private _useLogScale: boolean = DEFAULT_USE_LOG_SCALE;
 
-  constructor(public groups: HeatMapGroup[] = []) { }
+  constructor(public groups: HeatMapGroup[] = []) {}
 
   get history(): number { return this._history; }
 
@@ -154,6 +171,15 @@ export class HeatMap {
       group.mode = value;
     }
     this._mode = value;
+  }
+
+  get useLogScale(): boolean { return this._useLogScale; }
+
+  set useLogScale(value: boolean) {
+    for (let group of this.groups) {
+      group.useLogScale = value;
+    }
+    this._useLogScale = value;
   }
 
   getGroup(groupName: string): HeatMapGroup {
@@ -190,7 +216,8 @@ export class HeatMap {
         row.globalMax = maxes.get(row.name);
         row.globalMin = mins.get(row.name);
       }
-      // Have the group perform its update now that all its rows have been updated.
+      // Have the group perform its update now that all its rows have been
+      // updated.
       group.update();
     }
   }
@@ -206,6 +233,7 @@ export class HeatMap {
 export class HeatMapComponent implements OnInit {
   private _history: number = DEFAULT_HISTORY;
   private _mode: HeatMapMode = DEFAULT_MODE;
+  private _useLogScale: boolean = DEFAULT_USE_LOG_SCALE;
 
   @Input() heatMap: HeatMap;
   @Input() showGroupName: boolean = true;
@@ -240,15 +268,61 @@ export class HeatMapComponent implements OnInit {
     }
   }
 
-  ngOnInit() {}
-
-  showRow(name: string): boolean {
-    return this.visibleRows.indexOf(name) > -1;
+  @Input()
+  get useLogScale(): boolean {
+    return this._useLogScale;
   }
 
-  getColor(cell: HeatMapCell) {
-    let percent = ((1 - Math.abs(cell.relativeValue)) * 100).toFixed(0) + "%";
-    return cell.relativeValue > 0 ? `rgb(100%, ${percent}, ${percent})`
-                     : `rgb(${percent}, ${percent}, 100%)`;
+  set useLogScale(value: boolean) {
+    if (this.heatMap != null && this.useLogScale != value) {
+      this.heatMap.useLogScale = value;
+      this.heatMap.update();
+      this._useLogScale = value;
+    }
+  }
+
+  ngOnInit() {}
+
+  showRow(name: string): boolean { return this.visibleRows.indexOf(name) > -1; }
+
+  getColor(cell: HeatMapCell, rowIndex: number) {
+    let percent = Math.abs(cell.relativeValue);
+    let color = HeatColor.ALL[rowIndex % HeatColor.ALL.length];
+    return cell.relativeValue > 0 ? color.warm(percent) : color.cold(percent);
+  }
+}
+
+type ColorFunction = (percent: number) => [number, number, number];
+
+function baseColor(start: number, percent: number) {
+  return start + ((1 - start) * percent);
+}
+
+class HeatColor {
+
+  static PINK: HeatColor = new HeatColor(p => [p, baseColor(.965, p), 1],
+                                         p => [baseColor(.882, p), p, 1]);
+
+  static RED: HeatColor =
+      new HeatColor(p => [p, baseColor(.321, p), 1], p => [1, p, p]);
+
+  static ORANGE: HeatColor = new HeatColor(p => [baseColor(.259,p), 1, p],
+                                           p => [1, baseColor(.49, p), p]);
+
+  static YELLOW: HeatColor = new HeatColor(p => [p, 1, baseColor(.816, p)],
+                                           p => [1, baseColor(.882, p), p]);
+
+  static ALL: HeatColor[] =
+      [ HeatColor.RED, HeatColor.PINK, HeatColor.YELLOW, HeatColor.ORANGE ];
+
+  constructor(private c: ColorFunction, private w: ColorFunction) {}
+
+  cold(percent: number): string { return this.rgb(this.c(1 - percent)); }
+
+  warm(percent: number): string { return this.rgb(this.w(1 - percent)); }
+
+  private rgb(colors: [ number, number, number ]) {
+    let [red, green, blue] = colors.map(c => (c * 100).toFixed(0) + '%');
+    return `rgb(${red}, ${green}, ${blue})`;
   }
 }
