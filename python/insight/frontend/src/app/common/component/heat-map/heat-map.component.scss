@@ -1,13 +1,31 @@
 @import "../../../../style/flex";
 
+$cell-height: 20px;
+
 .heat-map {
-  .heat-grid {
+  .heat-group {
     width: 100%;
+
+    &.divider {
+      border-bottom: dotted 1px black;
+    }
     .heat-row {
-      .heat-cell {
-        border: solid 1px lightgray;
-        border-collapse: collapse;
-        height: 10px;
+      .heat-row-labels {
+        flex-shrink: 1;
+        max-width: 50px;
+        margin-right: 5px;
+        .heat-label {
+          border: solid 1px transparent;
+          height: $cell-height;
+        }
+      }
+
+      .heat-row-cells {
+        .heat-cell {
+          border: solid 1px lightgray;
+          height: $cell-height;
+          width: $cell-height;
+        }
       }
     }
   }

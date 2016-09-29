@@ -40,7 +40,8 @@ export class DetailsComponent implements OnInit {
   heatMapMode: UiFriendlyEnum<HeatMapMode> =
       new UiFriendlyEnum<HeatMapMode>(HeatMapMode);
   visibleMetrics: string[] = Array.from(METRIC_NAMES);
-  showLabels: boolean = true;
+  showParameterNames: boolean = true;
+  showParameterDivider: boolean = false;
 
   private _trainer: TrainerDomain;
   private batchResultSubscription: Subscription;
@@ -74,9 +75,10 @@ export class DetailsComponent implements OnInit {
 
   onMetricVisibilityChanged(metric: string, isVisible: boolean) {
     let index = this.visibleMetrics.indexOf(metric);
-    if (isVisible && index < 0) {
+    let metricVisible = this.isMetricVisible(metric);
+    if (isVisible && !metricVisible) {
       this.visibleMetrics.push(metric);
-    } else if (!isVisible && index < 0) {
+    } else if (!isVisible && metricVisible) {
       this.visibleMetrics.splice(index, 1);
     }
   }

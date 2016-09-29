@@ -7,7 +7,7 @@
 
       <div class="controls layout horizontal">
         <div>
-          <div>Relativity</div>
+          <div class="control-label">Relativity</div>
           <paper-radio-group class="layout vertical"
                              [(selected)]="heatMapMode.displayName">
             <paper-radio-button *ngFor="let name of heatMapMode.displayNames"
@@ -18,7 +18,7 @@
         </div>
 
         <div>
-          <div>Metrics</div>
+          <div class="control-label">Metrics</div>
           <div class="layout vertical">
             <paper-checkbox *ngFor="let metric of metricNames"
                             [checked]="isMetricVisible(metric)"
@@ -27,13 +27,19 @@
             </paper-checkbox>
           </div>
         </div>
+        <div>
+          <div class="control-label">Labels</div>
+          <paper-toggle-button [(checked)]="showParameterNames">Parameter names</paper-toggle-button>
+          <paper-toggle-button [(checked)]="showParameterDivider">Parameter divider</paper-toggle-button>
+        </div>
 
-        <paper-toggle-button [(checked)]="showLabels">Show labels</paper-toggle-button>
 
       </div>
       <app-heat-map [heatMap]="heatMap"
                     [mode]="heatMapMode.value"
-                    [visibleRows]="visibleMetrics"></app-heat-map>
+                    [visibleRows]="visibleMetrics"
+                    [showGroupName]="showParameterNames"
+                    [showGroupDivider]="showParameterDivider"></app-heat-map>
     </div>
 
     <div *ngIf="isTabActive('Graphs')" class="grid-container layout vertical">

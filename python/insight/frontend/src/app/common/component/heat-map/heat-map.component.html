@@ -1,13 +1,24 @@
 <div class="heat-map">
-  <div *ngFor="let group of heatMap.groups">
+  <div class="heat-group"
+       [class.divider]="showGroupDivider"
+       *ngFor="let group of heatMap.groups">
     <div *ngIf="showGroupName">{{group.name}}</div>
-    <div *ngFor="let row of group.rows">
-      <div *ngIf="showRow(row.name)"
-           class="layout horizontal">
-        <div>{{row.name}}</div>
-        <div *ngFor="let cell of row.visibleCells"
-             [style.background-color]="getColor(cell)"
-             title="{{cell.actualValue}}">
+
+    <div class="heat-row layout horizontal">
+      <div class="heat-row-labels layout vertical">
+        <div *ngFor="let row of group.rows">
+          <div class="heat-label" *ngIf="showRow(row.name)">{{row.name}}</div>
+        </div>
+      </div>
+
+      <div class="heat-row-cells layout vertical">
+        <div *ngFor="let row of group.rows">
+          <div class="layout horizontal" *ngIf="showRow(row.name)">
+            <div class="heat-cell" *ngFor="let cell of row.visibleCells"
+                 [style.background-color]="getColor(cell)"
+                 title="{{cell.actualValue.toLocaleString()}}">
+            </div>
+          </div>
         </div>
       </div>
     </div>

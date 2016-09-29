@@ -8,6 +8,7 @@ export enum HeatMapMode {
 
 const DEFAULT_HISTORY = 100;
 const DEFAULT_MODE = HeatMapMode.LOCAL;
+const DEFAULT_USE_LOG_SCALE = true;
 
 export class HeatMapCell {
   relativeValue: number = 0;
@@ -131,6 +132,9 @@ export class HeatMapGroup {
 export class HeatMap {
   private _history: number = DEFAULT_HISTORY;
   private _mode: HeatMapMode = DEFAULT_MODE;
+  // TODO: Implement a log scale to see if it makes gradient heat map more useful
+  // Maybe mark a particular row, but first just apply to everything to see what happens.
+  private _useLogScale: boolean = DEFAULT_USE_LOG_SCALE;
 
   constructor(public groups: HeatMapGroup[] = []) { }
 
@@ -205,6 +209,7 @@ export class HeatMapComponent implements OnInit {
 
   @Input() heatMap: HeatMap;
   @Input() showGroupName: boolean = true;
+  @Input() showGroupDivider: boolean = false;
   @Input() visibleRows: string[] = [];
 
   constructor() {}
@@ -241,9 +246,9 @@ export class HeatMapComponent implements OnInit {
     return this.visibleRows.indexOf(name) > -1;
   }
 
-  getColor(value: number) {
-    let percent = ((1 - Math.abs(value)) * 100).toFixed(0) + "%";
-    return value > 0 ? `rgb(100%, ${percent}, ${percent})`
+  getColor(cell: HeatMapCell) {
+    let percent = ((1 - Math.abs(cell.relativeValue)) * 100).toFixed(0) + "%";
+    return cell.relativeValue > 0 ? `rgb(100%, ${percent}, ${percent})`
                      : `rgb(${percent}, ${percent}, 100%)`;
   }
 }
