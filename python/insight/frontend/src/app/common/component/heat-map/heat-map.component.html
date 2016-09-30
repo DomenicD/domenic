@@ -1,21 +1,43 @@
 <div class="heat-map">
   <div class="heat-group"
        [class.divider]="showGroupDivider"
-       *ngFor="let group of heatMap.groups">
-    <div *ngIf="showGroupName">{{group.name}}</div>
+       *ngFor="let group of heatMap.groups; let firstGroup = first;">
 
+    <div class="column-label-row layout horizontal"
+         *ngIf="firstGroup && group.rows.length > 0">
+      <div class="heat-label first-heat-label"></div>
+      <div class="column-label layout vertical center-justified"
+           *ngFor="let cell of group.rows[0].visibleCells; let colIndex = index;">
+        <div>
+          {{group.rows[0].count - colIndex}}
+        </div>
+      </div>
+    </div>
+
+    <div class="heat-label" *ngIf="firstGroup"></div>
+
+    <div *ngIf="showGroupName">{{group.name}}</div>
     <div class="heat-row layout horizontal">
-      <div class="heat-row-labels layout vertical">
-        <div *ngFor="let row of group.rows">
-          <div class="heat-label" *ngIf="showRow(row.name)">{{row.name}}</div>
+      <div class="first-heat-label layout vertical">
+        <div *ngFor="let row of group.rows;">
+          <div class="heat-label" *ngIf="showRow(row)">{{row.name}}</div>
         </div>
       </div>
 
       <div class="heat-row-cells layout vertical">
-        <div *ngFor="let row of group.rows; let rowIndex = index;">
-          <div class="layout horizontal" *ngIf="showRow(row.name)">
-            <div class="heat-cell" *ngFor="let cell of row.visibleCells"
+        <div *ngFor="let row of group.rows;
+                     let rowIndex = index;
+                     let firstRow = first;
+                     let lastRow = last;">
+          <div class="layout horizontal" *ngIf="showRow(row)">
+            <div class="heat-cell"
+                 *ngFor="let cell of row.visibleCells; let cellIndex = index;"
+                 [class.selected]="selectedGroup == group.name &&
+                                   selectedColumn == cellIndex"
+                 [class.first]="firstRow"
+                 [class.last]="lastRow"
                  [style.background-color]="getColor(cell, rowIndex)"
+                 (click)="selectGroupColumn(group, row, cellIndex)"
                  title="{{cell.actualValue.toLocaleString()}}">
             </div>
           </div>

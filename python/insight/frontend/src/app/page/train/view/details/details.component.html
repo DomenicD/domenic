@@ -36,12 +36,20 @@
 
 
       </div>
-      <app-heat-map [heatMap]="heatMap"
-                    [mode]="heatMapMode.value"
-                    [visibleRows]="visibleMetrics"
-                    [showGroupName]="showParameterNames"
-                    [showGroupDivider]="showParameterDivider"
-                    [useLogScale]="useLogScale"></app-heat-map>
+      <div class="layout horizontal">
+        <app-heat-map class="flex-1"
+                      [heatMap]="heatMap"
+                      [mode]="heatMapMode.value"
+                      [visibleRows]="visibleMetrics"
+                      [showGroupName]="showParameterNames"
+                      [showGroupDivider]="showParameterDivider"
+                      [useLogScale]="useLogScale"></app-heat-map>
+        <div class="group-column-details">
+          <h2>Parameter Details</h2>
+          <div>Epoch: 7</div>
+          <div>Other info</div>
+        </div>
+      </div>
     </div>
 
     <div *ngIf="isTabActive('Graphs')" class="grid-container layout vertical">

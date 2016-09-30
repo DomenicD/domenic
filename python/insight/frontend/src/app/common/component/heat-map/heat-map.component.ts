@@ -1,5 +1,9 @@
-import {Component, OnInit, ViewEncapsulation, Input} from '@angular/core';
+import {
+  Component, OnInit, ViewEncapsulation, Input, EventEmitter, Pipe,
+  PipeTransform
+} from '@angular/core';
 import {getDefault} from "../../util/collection";
+import {Subscription} from "rxjs/Rx";
 
 export enum HeatMapMode {
   LOCAL,
@@ -29,6 +33,10 @@ export class HeatMapRow {
   private cells: HeatMapCell[] = [];
 
   constructor(public name: string) {}
+
+  get count(): number {
+    return this.cells.length;
+  }
 
   addValue(value: number) {
     this.cells.unshift(new HeatMapCell(value));
@@ -155,6 +163,13 @@ export class HeatMap {
 
   constructor(public groups: HeatMapGroup[] = []) {}
 
+  get columnCount(): number {
+    if (this.groups.length < 1 || this.groups[0].rows.length < 1) {
+      return 0;
+    }
+    return this.groups[0].rows[0].count;
+  }
+
   get history(): number { return this._history; }
 
   set history(value: number) {
@@ -223,6 +238,10 @@ export class HeatMap {
   }
 }
 
+export class GroupColumnSelectionEvent {
+  constructor(public groupName: string, public rowName, public column: number) { }
+}
+
 @Component({
   moduleId : module.id,
   selector : 'app-heat-map',
@@ -234,6 +253,10 @@ export class HeatMapComponent implements OnInit {
   private _history: number = DEFAULT_HISTORY;
   private _mode: HeatMapMode = DEFAULT_MODE;
   private _useLogScale: boolean = DEFAULT_USE_LOG_SCALE;
+
+  selectedGroup: string;
+  selectedColumn: number;
+  groupColumnSelection: EventEmitter<GroupColumnSelectionEvent> = new EventEmitter<GroupColumnSelectionEvent>();
 
   @Input() heatMap: HeatMap;
   @Input() showGroupName: boolean = true;
@@ -283,7 +306,16 @@ export class HeatMapComponent implements OnInit {
 
   ngOnInit() {}
 
-  showRow(name: string): boolean { return this.visibleRows.indexOf(name) > -1; }
+  showRow(row: HeatMapRow): boolean {
+    return this.visibleRows.indexOf(row.name) > -1;
+  }
+
+  selectGroupColumn(group: HeatMapGroup, row: HeatMapRow, column: number) {
+    let event = new GroupColumnSelectionEvent(group.name, row.name, column);
+    this.selectedGroup = event.groupName;
+    this.selectedColumn = event.column;
+    this.groupColumnSelection.emit(event);
+  }
 
   getColor(cell: HeatMapCell, rowIndex: number) {
     let percent = Math.abs(cell.relativeValue);

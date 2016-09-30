@@ -40,9 +40,9 @@ export class DetailsComponent implements OnInit {
   heatMapMode: UiFriendlyEnum<HeatMapMode> =
       new UiFriendlyEnum<HeatMapMode>(HeatMapMode);
   visibleMetrics: string[] = Array.from(METRIC_NAMES);
-  showParameterNames: boolean = true;
-  showParameterDivider: boolean = false;
-  useLogScale: boolean = false;
+  showParameterNames: boolean = false;
+  showParameterDivider: boolean = true;
+  useLogScale: boolean = true;
 
   private _trainer: TrainerDomain;
   private batchResultSubscription: Subscription;
