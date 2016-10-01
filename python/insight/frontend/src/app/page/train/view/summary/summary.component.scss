@@ -3,9 +3,9 @@
 .summary {
   width: 100%;
   .card-content {
-    height: 600px;
+    height: 400px;
     vaadin-grid {
-      flex-basis: 400px;
+      flex-basis: 200px;
     }
     .flex-spacer {
       flex-basis: 10px;

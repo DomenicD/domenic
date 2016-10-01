@@ -1,8 +1,8 @@
 <paper-card class="details" heading="Details">
   <div class="card-content">
-    <paper-tabs [(selected)]="tabIndex">
-      <paper-tab *ngFor="let tab of tabs">{{tab}}</paper-tab>
-    </paper-tabs>
+    <!--<paper-tabs [(selected)]="tabIndex">-->
+      <!--<paper-tab *ngFor="let tab of tabs">{{tab}}</paper-tab>-->
+    <!--</paper-tabs>-->
     <div *ngIf="isTabActive('Heat Map')" class="grid-container layout vertical">
 
       <div class="controls layout horizontal">
@@ -36,18 +36,53 @@
 
 
       </div>
-      <div class="layout horizontal">
-        <app-heat-map class="flex-1"
+      <div class="heat-map-container layout horizontal">
+        <app-heat-map class="heat-map layout vertical flex-1"
                       [heatMap]="heatMap"
                       [mode]="heatMapMode.value"
                       [visibleRows]="visibleMetrics"
                       [showGroupName]="showParameterNames"
                       [showGroupDivider]="showParameterDivider"
-                      [useLogScale]="useLogScale"></app-heat-map>
-        <div class="group-column-details">
-          <h2>Parameter Details</h2>
-          <div>Epoch: 7</div>
-          <div>Other info</div>
+                      [useLogScale]="useLogScale"
+                      (onGroupColumnSelection)="onGroupColumnSelection($event)"></app-heat-map>
+
+        <div class="group-column-details flex-1" *ngIf="detail != null">
+          <h3>Parameter details</h3>
+          <table>
+            <tr>
+              <td class="detail-label">Name</td>
+              <td class="detail-data">{{detail.name}}</td>
+            </tr>
+            <tr>
+              <td class="detail-label">Epoch</td>
+              <td class="detail-data">{{detail.epoch}}</td>
+            </tr>
+            <tr>
+              <td class="detail-label">Weight</td>
+              <td class="detail-data">{{detail.weight}}</td>
+            </tr>
+            <tr>
+              <td class="detail-label">Gradient</td>
+              <td class="detail-data">{{detail.gradient}}</td>
+            </tr>
+            <tr>
+              <td class="detail-label">Delta</td>
+              <td class="detail-data">{{detail.delta.value}}</td>
+            </tr>
+          </table>
+          <h4>Delta steps</h4>
+          <table>
+            <tr>
+              <td class="detail-label">Name</td>
+              <td class="detail-label">Output</td>
+              <td class="detail-label">Diff</td>
+            </tr>
+            <tr *ngFor="let step of detail.delta.steps">
+              <td class="detail-data">{{step.name}}</td>
+              <td class="detail-data">{{step.output}}</td>
+              <td class="detail-data">{{step.output - step.input}}</td>
+            </tr>
+          </table>
         </div>
       </div>
     </div>

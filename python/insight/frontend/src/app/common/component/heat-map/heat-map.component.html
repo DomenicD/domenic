@@ -33,11 +33,11 @@
             <div class="heat-cell"
                  *ngFor="let cell of row.visibleCells; let cellIndex = index;"
                  [class.selected]="selectedGroup == group.name &&
-                                   selectedColumn == cellIndex"
+                                   selectedColumn == row.count - cellIndex"
                  [class.first]="firstRow"
                  [class.last]="lastRow"
                  [style.background-color]="getColor(cell, rowIndex)"
-                 (click)="selectGroupColumn(group, row, cellIndex)"
+                 (click)="selectGroupColumn(group, row, row.count - cellIndex)"
                  title="{{cell.actualValue.toLocaleString()}}">
             </div>
           </div>

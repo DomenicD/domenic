@@ -58,6 +58,7 @@ class Trainer:
         self.step_tally += batch_size
         self.batch_tally += 1
         batch_result = BatchResult(self.batch_tally, self.network, step_results)
+        self.network.reset()
         return batch_result
 
     def validate(self) -> ValidationResult:

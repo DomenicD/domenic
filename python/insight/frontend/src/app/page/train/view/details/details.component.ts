@@ -1,11 +1,11 @@
 import {Component, OnInit, Input, ViewEncapsulation} from '@angular/core';
 import {Subscription} from "rxjs";
-import {TrainerBatchResult} from "../../../../common/service/api/insight-api-message";
+import {TrainerBatchResult, Delta} from "../../../../common/service/api/insight-api-message";
 import {TrainerDomain} from "../../../../common/domain/trainer";
 import {
   HeatMap,
   HeatMapComponent,
-  HeatMapMode
+  HeatMapMode, GroupColumnSelectionEvent
 } from "../../../../common/component/heat-map/heat-map.component";
 import {UiFriendlyEnum} from "../../../../common/domain/ui-friendly-enum";
 import {PolymerElement} from "@vaadin/angular2-polymer";
@@ -15,6 +15,14 @@ const DELTA_ROW_NAME = 'd';
 const GRADIENT_ROW_NAME = 'g';
 const WEIGHT_ROW_NAME = 'w';
 const METRIC_NAMES = [ DELTA_ROW_NAME, GRADIENT_ROW_NAME, WEIGHT_ROW_NAME ];
+
+export class ParameterDetail {
+  constructor(public epoch: number,
+              public name: string,
+              public delta: Delta,
+              public gradient: number,
+              public weight: number) { }
+}
 
 @Component({
   moduleId : module.id,
@@ -35,6 +43,7 @@ const METRIC_NAMES = [ DELTA_ROW_NAME, GRADIENT_ROW_NAME, WEIGHT_ROW_NAME ];
 export class DetailsComponent implements OnInit {
 
   heatMap: HeatMap = new HeatMap();
+  detail: ParameterDetail;
   heatMapHistory: number = 100;
   tabIndex: number = 0;
   heatMapMode: UiFriendlyEnum<HeatMapMode> =
@@ -46,6 +55,7 @@ export class DetailsComponent implements OnInit {
 
   private _trainer: TrainerDomain;
   private batchResultSubscription: Subscription;
+  private parameterDetails = new Map<string, ParameterDetail>();
 
   constructor() {}
 
@@ -88,24 +98,38 @@ export class DetailsComponent implements OnInit {
     return this.tabs.indexOf(tab) === this.tabIndex;
   }
 
+  onGroupColumnSelection(event: GroupColumnSelectionEvent) {
+    let key = this.parameterDetailKey(event.groupName, event.column);
+    this.detail = this.parameterDetails.get(key);
+  }
+
   private updateParameters(batchResult: TrainerBatchResult) {
     let paramSetMaps = batchResult.parameters;
     for (let paramSetMap of paramSetMaps) {
       for (let key in paramSetMap) {
         let paramSet = paramSetMap[key];
         let name = paramSet.name;
-        let deltas = [].concat(...paramSet.deltas).map(d => d.value);
+        let deltas = [].concat(...paramSet.deltas);
         let gradients = [].concat(...paramSet.gradients);
         let weights = [].concat(...paramSet.values);
 
         for (let i = 0; i < deltas.length; i++) {
           let groupName = `${name}_${i}`;
-          this.heatMap.getGroup(groupName).getRow(DELTA_ROW_NAME).addValue(deltas[i]);
-          this.heatMap.getGroup(groupName).getRow(GRADIENT_ROW_NAME).addValue(gradients[i]);
-          this.heatMap.getGroup(groupName).getRow(WEIGHT_ROW_NAME).addValue(weights[i]);
+          let delta = deltas[i];
+          let gradient = gradients[i];
+          let weight = weights[i];
+          this.heatMap.getGroup(groupName).getRow(DELTA_ROW_NAME).addValue(delta.value);
+          this.heatMap.getGroup(groupName).getRow(GRADIENT_ROW_NAME).addValue(gradient);
+          this.heatMap.getGroup(groupName).getRow(WEIGHT_ROW_NAME).addValue(weight);
+          var detail = new ParameterDetail(batchResult.batchNumber, groupName, delta, gradient, weight);
+          this.parameterDetails.set(this.parameterDetailKey(detail.name, detail.epoch), detail);
         }
       }
     }
     this.heatMap.update();
+  }
+
+  private parameterDetailKey(name: string, epoch: number): string {
+    return `${name}:${epoch}`;
   }
 }

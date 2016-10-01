@@ -1,6 +1,6 @@
 import {
   Component, OnInit, ViewEncapsulation, Input, EventEmitter, Pipe,
-  PipeTransform
+  PipeTransform, Output
 } from '@angular/core';
 import {getDefault} from "../../util/collection";
 import {Subscription} from "rxjs/Rx";
@@ -256,7 +256,8 @@ export class HeatMapComponent implements OnInit {
 
   selectedGroup: string;
   selectedColumn: number;
-  groupColumnSelection: EventEmitter<GroupColumnSelectionEvent> = new EventEmitter<GroupColumnSelectionEvent>();
+
+  @Output() onGroupColumnSelection: EventEmitter<GroupColumnSelectionEvent> = new EventEmitter<GroupColumnSelectionEvent>();
 
   @Input() heatMap: HeatMap;
   @Input() showGroupName: boolean = true;
@@ -314,7 +315,7 @@ export class HeatMapComponent implements OnInit {
     let event = new GroupColumnSelectionEvent(group.name, row.name, column);
     this.selectedGroup = event.groupName;
     this.selectedColumn = event.column;
-    this.groupColumnSelection.emit(event);
+    this.onGroupColumnSelection.emit(event);
   }
 
   getColor(cell: HeatMapCell, rowIndex: number) {

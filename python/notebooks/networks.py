@@ -18,6 +18,9 @@ class NeuralNetwork:
         self.id = str(uuid.uuid4())
         self.layers = layers
         self.total_error = 0.0
+        self.forward_pass_tally = 0
+        self.backward_pass_tally = 0
+
 
     @property
     def input_count(self):
@@ -35,6 +38,11 @@ class NeuralNetwork:
     def outputs(self):
         return self.layers[-1].outputs
 
+    def reset(self):
+        self.total_error = 0.0
+        self.forward_pass_tally = 0
+        self.backward_pass_tally = 0
+
     def adjust_parameters(self, parameter_batch: Sequence[Sequence[Mapping[str, ParameterSet]]]) -> \
             Sequence[Mapping[str, ParameterSet]]:
         batch_count = len(parameter_batch)
@@ -48,13 +56,11 @@ class NeuralNetwork:
     def get_parameters(self):
         return [layer.get_parameters() for layer in self.layers]
 
-    @abstractmethod
     def forward_pass(self, inputs: Sequence[float]):
-        pass
+        self.forward_pass_tally += 1
 
-    @abstractmethod
     def backward_pass(self, expected: Sequence[float]):
-        pass
+        self.backward_pass_tally += 1
 
 
 class FeedForward(NeuralNetwork):
@@ -63,11 +69,13 @@ class FeedForward(NeuralNetwork):
         self.cost = cost
 
     def forward_pass(self, inputs: Sequence[float]):
+        super(FeedForward, self).forward_pass(inputs)
         for layer in self.layers:
             inputs = layer.forward_pass(inputs)
 
     def backward_pass(self, expected: Sequence[float]):
-        self.total_error = sum(self.cost.apply(self.outputs, expected))
+        super(FeedForward, self).backward_pass(expected)
+        self.total_error += sum(self.cost.apply(self.outputs, expected))
         upstream_derivative = np.matrix(self.cost.apply_derivative(self.outputs, expected))
         for layer in reversed(self.layers):
             upstream_derivative = layer.backward_pass(upstream_derivative)

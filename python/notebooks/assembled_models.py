@@ -25,7 +25,7 @@ def quadratic_feed_forward_network(nodes: Sequence[int], param_update_rate: floa
     layers = []
     network = FeedForward(layers)
 
-    def total_error_getter(): return network.total_error
+    def total_error_getter(): return network.total_error/network.forward_pass_tally
 
     for i in range(len(nodes) - 1):
         parameter_updater = selective_error_log_updater(

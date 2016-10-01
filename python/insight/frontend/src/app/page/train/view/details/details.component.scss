@@ -17,11 +17,26 @@
       }
     }
 
+    .heat-map-container {
+      height: 600px;
+    }
+
     .group-column-details {
       border: solid 1px gray;
-      flex-basis: 300px;
-      margin-left: 10px;
-      padding: 0 10px;
+      margin: 10px;
+      padding: 10px;
+
+      td {
+        padding: 5px 10px;
+      }
+
+      .detail-label {
+        white-space: nowrap;
+      }
+
+      .detail-data {
+
+      }
     }
   }
 }
