@@ -17,7 +17,7 @@
           </paper-radio-group>
         </div>
 
-        <div>
+        <div class="metrics">
           <div class="control-label">Metrics</div>
           <div class="layout vertical">
             <paper-checkbox *ngFor="let metric of metricNames"
@@ -27,7 +27,7 @@
             </paper-checkbox>
           </div>
         </div>
-        <div>
+        <div class="visuals">
           <div class="control-label">Visuals</div>
           <paper-toggle-button [(checked)]="showParameterNames">Parameter names</paper-toggle-button>
           <paper-toggle-button [(checked)]="showParameterDivider">Parameter divider</paper-toggle-button>
@@ -50,12 +50,16 @@
           <h3>Parameter details</h3>
           <table>
             <tr>
+              <td class="detail-label">Epoch</td>
+              <td class="detail-data">{{detail.epoch}}</td>
+            </tr>
+            <tr>
               <td class="detail-label">Name</td>
               <td class="detail-data">{{detail.name}}</td>
             </tr>
             <tr>
-              <td class="detail-label">Epoch</td>
-              <td class="detail-data">{{detail.epoch}}</td>
+              <td class="detail-label">Weight &Delta;</td>
+              <td class="detail-data">{{detail.weightChange}}</td>
             </tr>
             <tr>
               <td class="detail-label">Weight</td>

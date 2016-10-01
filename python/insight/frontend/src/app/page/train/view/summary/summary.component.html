@@ -1,50 +1,32 @@
 <paper-card class="summary" heading="Summary">
   <div class="card-content layout horizontal">
     <div class="flex-1">
-      <div class="layout vertical">
-        <div #batchChart class="google-chart"></div>
-        <vaadin-grid>
-          <table>
-            <colgroup>
-              <col name="Epoch">
-              <col name="Total Error">
-              <col name="Avg Error">
-              <col name="Delta">
-              <col name="Size">
-            </colgroup>
-            <tbody>
-            <tr *ngFor="let summary of batchSummaries">
-              <td>{{summary.epoch}}</td>
-              <td>{{summary.totalError}}</td>
-              <td>{{summary.error}}</td>
-              <td>{{summary.delta}}</td>
-              <td>{{summary.size}}</td>
-            </tr>
-            </tbody>
-          </table>
-        </vaadin-grid>
-      </div>
+      <vaadin-grid>
+        <table>
+          <colgroup>
+            <col name="Epoch">
+            <col name="Batch Error">
+            <col name="Validation Error">
+            <col name="Validation Delta">
+          </colgroup>
+          <tbody>
+          <tr *ngFor="let summary of validationSummaries">
+            <td>{{summary.epoch}}</td>
+            <td>{{summary.batchError}}</td>
+            <td>{{summary.validationError}}</td>
+            <td>{{summary.validationDelta}}</td>
+          </tr>
+          </tbody>
+        </table>
+      </vaadin-grid>
     </div>
+
     <div class="flex-spacer"></div>
+
     <div class="flex-1">
       <div class="layout vertical">
         <div #validationChart class="google-chart"></div>
-        <vaadin-grid>
-          <table>
-            <colgroup>
-              <col name="Epoch">
-              <col name="Error">
-              <col name="Delta">
-            </colgroup>
-            <tbody>
-            <tr *ngFor="let summary of validationSummaries">
-              <td>{{summary.epoch}}</td>
-              <td>{{summary.error}}</td>
-              <td>{{summary.delta}}</td>
-            </tr>
-            </tbody>
-          </table>
-        </vaadin-grid>
+        <div #batchChart class="google-chart"></div>
       </div>
     </div>
   </div>

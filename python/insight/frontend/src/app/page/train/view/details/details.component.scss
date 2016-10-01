@@ -8,12 +8,26 @@
       flex-wrap: wrap;
 
     .controls {
+      margin-bottom: 10px;
+
       > div {
-        margin-right: 10px;
+        margin-right: 70px;
       }
 
       .control-label {
-        margin: 10px auto;
+        margin: 0 0 10px 0;
+      }
+
+      .metrics {
+        paper-checkbox {
+          margin: 5px 0;
+        }
+      }
+
+      .visuals {
+        paper-toggle-button {
+          margin: 5px 0;
+        }
       }
     }
 

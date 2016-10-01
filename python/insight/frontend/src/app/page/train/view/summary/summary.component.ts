@@ -14,8 +14,7 @@ import {
 } from "../../../../common/service/api/insight-api-message";
 import {Subscription} from "rxjs";
 import {PolymerElement} from "@vaadin/angular2-polymer";
-
-function format(value: number) { return Math.round(value).toLocaleString(); }
+import {formatNumber, formatPercent} from "../../../../common/util/parse";
 
 export class GoogleChart<T> {
   private chart: google.visualization.ChartWrapper;
@@ -33,22 +32,16 @@ export class GoogleChart<T> {
 
 export class TrainingSummary {
   epoch: string;
-  error: string;
-  delta: string;
-  constructor(epoch: number, error: number, lastError: number) {
-    this.epoch = format(epoch);
-    this.error = format(error);
-    this.delta = format(((error - lastError) / lastError) * 100) + '%';
-  }
-}
-
-export class BatchSummary extends TrainingSummary {
-  size: string;
-  totalError: string;
-  constructor(batchResult: TrainerBatchResult, lastBatchError: number) {
-    super(batchResult.batchNumber, batchResult.avgError, lastBatchError);
-    this.size = format(batchResult.batchSize);
-    this.totalError = format(batchResult.totalError);
+  batchError: string;
+  validationError: string;
+  validationDelta: string;
+  constructor(epoch: number, batchError: number, validationError: number,
+              lastValidationError: number) {
+    this.epoch = formatNumber(epoch);
+    this.batchError = formatNumber(batchError);
+    this.validationError = formatNumber(validationError);
+    this.validationDelta = formatPercent(
+        (validationError - lastValidationError) / lastValidationError);
   }
 }
 
@@ -68,9 +61,7 @@ export class SummaryComponent implements OnInit,
   private validationChart: GoogleChart<google.visualization.LineChartOptions>;
   private lastValidationResult: TrainerValidationResult;
 
-  batchSummaries: BatchSummary[] = [];
   validationSummaries: TrainingSummary[] = [];
-  batchError: number = 0;
   validationError: number = 0;
 
   @ViewChild('batchChart') batchChartContainer: ElementRef;
@@ -102,20 +93,19 @@ export class SummaryComponent implements OnInit,
   }
 
   private onBatchResult(batchResult: TrainerBatchResult): void {
-    this.batchSummaries.unshift(new BatchSummary(batchResult, this.batchError));
     this.updateBatchChart(batchResult);
-    this.batchError = batchResult.avgError;
-
     this.trainer.validate().subscribe(
         (validationResult) =>
-            this.onValidationResult(validationResult, batchResult.batchNumber));
+            this.onValidationResult(batchResult, validationResult));
   }
 
-  private onValidationResult(result: TrainerValidationResult, epoch: number) {
+  private onValidationResult(batchResult: TrainerBatchResult,
+                             validationResult: TrainerValidationResult) {
     this.validationSummaries.unshift(
-        new TrainingSummary(epoch, result.error, this.validationError));
-    this.validationError = result.error;
-    this.updateValidationChart(result);
+        new TrainingSummary(batchResult.batchNumber, batchResult.avgError,
+                            validationResult.error, this.validationError));
+    this.validationError = validationResult.error;
+    this.updateValidationChart(validationResult);
   }
 
   private updateBatchChart(result: TrainerBatchResult) {
@@ -160,10 +150,7 @@ export class SummaryComponent implements OnInit,
 
   private batchChartOptions(result: TrainerBatchResult):
       google.visualization.ScatterChartOptions {
-    return {
-      title : `Batch`,
-      legend : {position : 'bottom'}
-    };
+    return {title : `Batch`, legend : {position : 'bottom'}};
   }
 
   private validationChartOptions(result: TrainerValidationResult):

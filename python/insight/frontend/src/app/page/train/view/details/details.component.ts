@@ -1,14 +1,19 @@
 import {Component, OnInit, Input, ViewEncapsulation} from '@angular/core';
 import {Subscription} from "rxjs";
-import {TrainerBatchResult, Delta} from "../../../../common/service/api/insight-api-message";
+import {
+  TrainerBatchResult,
+  Delta
+} from "../../../../common/service/api/insight-api-message";
 import {TrainerDomain} from "../../../../common/domain/trainer";
 import {
   HeatMap,
   HeatMapComponent,
-  HeatMapMode, GroupColumnSelectionEvent
+  HeatMapMode,
+  GroupColumnSelectionEvent
 } from "../../../../common/component/heat-map/heat-map.component";
 import {UiFriendlyEnum} from "../../../../common/domain/ui-friendly-enum";
 import {PolymerElement} from "@vaadin/angular2-polymer";
+import {formatPercent} from "../../../../common/util/parse";
 
 const TABS = [ "Heat Map", "Graphs" ];
 const DELTA_ROW_NAME = 'd';
@@ -17,11 +22,13 @@ const WEIGHT_ROW_NAME = 'w';
 const METRIC_NAMES = [ DELTA_ROW_NAME, GRADIENT_ROW_NAME, WEIGHT_ROW_NAME ];
 
 export class ParameterDetail {
-  constructor(public epoch: number,
-              public name: string,
-              public delta: Delta,
-              public gradient: number,
-              public weight: number) { }
+  weightChange: string;
+
+  constructor(public epoch: number, public name: string, public delta: Delta,
+              public gradient: number, public weight: number) {
+    let deltaValue = this.delta.value;
+    this.weightChange = formatPercent(deltaValue / (this.weight - deltaValue));
+  }
 }
 
 @Component({
@@ -118,11 +125,19 @@ export class DetailsComponent implements OnInit {
           let delta = deltas[i];
           let gradient = gradients[i];
           let weight = weights[i];
-          this.heatMap.getGroup(groupName).getRow(DELTA_ROW_NAME).addValue(delta.value);
-          this.heatMap.getGroup(groupName).getRow(GRADIENT_ROW_NAME).addValue(gradient);
-          this.heatMap.getGroup(groupName).getRow(WEIGHT_ROW_NAME).addValue(weight);
-          var detail = new ParameterDetail(batchResult.batchNumber, groupName, delta, gradient, weight);
-          this.parameterDetails.set(this.parameterDetailKey(detail.name, detail.epoch), detail);
+          this.heatMap.getGroup(groupName)
+              .getRow(DELTA_ROW_NAME)
+              .addValue(delta.value);
+          this.heatMap.getGroup(groupName)
+              .getRow(GRADIENT_ROW_NAME)
+              .addValue(gradient);
+          this.heatMap.getGroup(groupName)
+              .getRow(WEIGHT_ROW_NAME)
+              .addValue(weight);
+          var detail = new ParameterDetail(batchResult.batchNumber, groupName,
+                                           delta, gradient, weight);
+          this.parameterDetails.set(
+              this.parameterDetailKey(detail.name, detail.epoch), detail);
         }
       }
     }

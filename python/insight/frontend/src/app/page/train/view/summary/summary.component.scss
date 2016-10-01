@@ -5,7 +5,7 @@
   .card-content {
     height: 400px;
     vaadin-grid {
-      flex-basis: 200px;
+      height: 100%;
     }
     .flex-spacer {
       flex-basis: 10px;
