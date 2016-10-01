@@ -1,20 +1,20 @@
 <div class="heat-map">
-  <div class="heat-group"
-       [class.divider]="showGroupDivider"
-       *ngFor="let group of heatMap.groups; let firstGroup = first;">
 
-    <div class="column-label-row layout horizontal"
-         *ngIf="firstGroup && group.rows.length > 0">
-      <div class="heat-label first-heat-label"></div>
-      <div class="column-label layout vertical center-justified"
-           *ngFor="let cell of group.rows[0].visibleCells; let colIndex = index;">
-        <div>
-          {{group.rows[0].count - colIndex}}
-        </div>
+  <div class="column-label-row layout horizontal"
+       *ngIf="columnCount > 0">
+    <div class="heat-label first-heat-label"></div>
+    <div class="column-label layout vertical center-justified"
+         *ngFor="let cell of heatMap.groups[0].rows[0].visibleCells;
+                 let colIndex = index;">
+      <div>
+        {{columnCount - colIndex}}
       </div>
     </div>
+  </div>
 
-    <div class="heat-label" *ngIf="firstGroup"></div>
+  <div class="heat-group"
+       [class.divider]="showGroupDivider"
+       *ngFor="let group of heatMap.groups;">
 
     <div *ngIf="showGroupName">{{group.name}}</div>
     <div class="heat-row layout horizontal">

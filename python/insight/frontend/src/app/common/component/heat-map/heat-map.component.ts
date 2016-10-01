@@ -1,6 +1,12 @@
 import {
-  Component, OnInit, ViewEncapsulation, Input, EventEmitter, Pipe,
-  PipeTransform, Output
+  Component,
+  OnInit,
+  ViewEncapsulation,
+  Input,
+  EventEmitter,
+  Pipe,
+  PipeTransform,
+  Output
 } from '@angular/core';
 import {getDefault} from "../../util/collection";
 import {Subscription} from "rxjs/Rx";
@@ -34,9 +40,7 @@ export class HeatMapRow {
 
   constructor(public name: string) {}
 
-  get count(): number {
-    return this.cells.length;
-  }
+  get count(): number { return this.cells.length; }
 
   addValue(value: number) {
     this.cells.unshift(new HeatMapCell(value));
@@ -163,13 +167,6 @@ export class HeatMap {
 
   constructor(public groups: HeatMapGroup[] = []) {}
 
-  get columnCount(): number {
-    if (this.groups.length < 1 || this.groups[0].rows.length < 1) {
-      return 0;
-    }
-    return this.groups[0].rows[0].count;
-  }
-
   get history(): number { return this._history; }
 
   set history(value: number) {
@@ -239,7 +236,8 @@ export class HeatMap {
 }
 
 export class GroupColumnSelectionEvent {
-  constructor(public groupName: string, public rowName, public column: number) { }
+  constructor(public groupName: string, public rowName, public column: number) {
+  }
 }
 
 @Component({
@@ -257,7 +255,9 @@ export class HeatMapComponent implements OnInit {
   selectedGroup: string;
   selectedColumn: number;
 
-  @Output() onGroupColumnSelection: EventEmitter<GroupColumnSelectionEvent> = new EventEmitter<GroupColumnSelectionEvent>();
+  @Output()
+  onGroupColumnSelection: EventEmitter<GroupColumnSelectionEvent> =
+      new EventEmitter<GroupColumnSelectionEvent>();
 
   @Input() heatMap: HeatMap;
   @Input() showGroupName: boolean = true;
@@ -305,6 +305,14 @@ export class HeatMapComponent implements OnInit {
     }
   }
 
+  get columnCount(): number {
+    if (this.heatMap != null && this.heatMap.groups.length < 1 ||
+        this.heatMap.groups[0].rows.length < 1) {
+      return 0;
+    }
+    return this.heatMap.groups[0].rows[0].count;
+  }
+
   ngOnInit() {}
 
   showRow(row: HeatMapRow): boolean {
@@ -339,7 +347,7 @@ class HeatColor {
   static RED: HeatColor =
       new HeatColor(p => [p, baseColor(.321, p), 1], p => [1, p, p]);
 
-  static ORANGE: HeatColor = new HeatColor(p => [baseColor(.259,p), 1, p],
+  static ORANGE: HeatColor = new HeatColor(p => [baseColor(.259, p), 1, p],
                                            p => [1, baseColor(.49, p), p]);
 
   static YELLOW: HeatColor = new HeatColor(p => [p, 1, baseColor(.816, p)],

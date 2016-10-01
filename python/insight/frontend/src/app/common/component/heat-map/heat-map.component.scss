@@ -11,60 +11,66 @@ $selected-cell-border: solid 2px black;
 
 .heat-map {
   overflow: auto;
+  height: 100%;
+  width: 100%;
+
   .heat-group {
-    width: 100%;
+    width: fit-content;
 
     &.divider {
       border-bottom: dotted 1px black;
     }
+  }
 
-    .first-heat-label {
-      flex-shrink: 1;
-      max-width: 50px;
-      margin-right: $row-label-margin;
+  .first-heat-label {
+    background-color: white;
+    max-width: 50px;
+    margin-right: $row-label-margin;
+    position: sticky;
+    left: 0;
+  }
+
+  .heat-label {
+    @include cell;
+    border: solid 1px transparent;
+  }
+
+  .heat-cell {
+    @include cell;
+    border: solid 1px lightgray;
+    &:hover:not(.selected) {
+      border-color: gray;
+      border-width: 2px;
+      height: $cell-length - 2;
+      width: $cell-length - 2;
     }
 
-    .heat-label {
-      @include cell;
-      border: solid 1px transparent;
-    }
-
-    .heat-cell {
-      @include cell;
-      border: solid 1px lightgray;
-      &:hover:not(.selected) {
-        border-color: gray;
-        border-width: 2px;
-        height: $cell-length - 2;
-        width: $cell-length - 2;
+    &.selected {
+      border-left: $selected-cell-border;
+      border-right: $selected-cell-border;
+      width: $cell-length - 2;
+      &.first {
+        border-top: $selected-cell-border;
+        height: $cell-length - 1;
       }
-
-      &.selected {
-        border-left: $selected-cell-border;
-        border-right: $selected-cell-border;
-        width: $cell-length - 2;
-        &.first {
-          border-top: $selected-cell-border;
-          height: $cell-length - 1;
-        }
-        &.last {
-          border-bottom: $selected-cell-border;
-          height: $cell-length - 1;
-        }
+      &.last {
+        border-bottom: $selected-cell-border;
+        height: $cell-length - 1;
       }
     }
+  }
 
-    .column-label-row {
-      background-color: white;
-      position: absolute;
-      z-index: 1;
-    }
+  .column-label-row {
+    background-color: white;
+    position: sticky;
+    top: 0;
+    width: fit-content;
+  }
 
-    .column-label {
-      @include cell;
-      border: solid 1px lightgray;
-      font-size: 10px;
-      text-align: center;
-    }
+  .column-label {
+    @include cell;
+    border: solid 1px lightgray;
+    font-size: 10px;
+    text-align: center;
   }
 }
