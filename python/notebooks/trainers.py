@@ -9,11 +9,12 @@ from python.notebooks.networks import NeuralNetwork
 
 
 class BatchStepResult:
-    def __init__(self, inputs: Sequence[float], expected: Sequence[float], network: NeuralNetwork):
+    def __init__(self, inputs: Sequence[float], expected: Sequence[float], network: NeuralNetwork,
+                 error: float):
         self.inputs = inputs
         self.expected = expected
         self.outputs = network.outputs
-        self.error = network.total_error
+        self.error = error
         self.parameters = network.get_parameters()
 
 
@@ -52,16 +53,17 @@ class Trainer:
         return self.batch_train(1)
 
     def batch_train(self, batch_size: int = -1) -> BatchResult:
+        self.network.reset()
         if batch_size < 1:
             batch_size = self.batch_size
         step_results = [self._batch_step() for _ in range(batch_size)]
         self.step_tally += batch_size
         self.batch_tally += 1
         batch_result = BatchResult(self.batch_tally, self.network, step_results)
-        self.network.reset()
         return batch_result
 
     def validate(self) -> ValidationResult:
+        self.network.reset()
         steps = [self._batch_step(np.array(inputs)) for inputs in self._get_validation_set()]
         return ValidationResult(steps)
 
@@ -85,8 +87,8 @@ class ClosedFormFunctionTrainer(Trainer):
             inputs = np.random.uniform(self.domain[0], self.domain[1], self.network.input_count)
         self.network.forward_pass(inputs)
         expected = self.function(inputs)
-        self.network.backward_pass(expected)
-        return BatchStepResult(inputs, expected, self.network)
+        error = self.network.backward_pass(expected)
+        return BatchStepResult(inputs, expected, self.network, error)
 
     def _get_validation_set(self) -> Sequence[Sequence[float]]:
         return itertools.product(range(self.domain[0], self.domain[1], 1),

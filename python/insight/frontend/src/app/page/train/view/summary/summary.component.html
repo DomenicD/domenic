@@ -7,13 +7,15 @@
           <table>
             <colgroup>
               <col name="Epoch">
-              <col name="Error">
+              <col name="Total Error">
+              <col name="Avg Error">
               <col name="Delta">
               <col name="Size">
             </colgroup>
             <tbody>
             <tr *ngFor="let summary of batchSummaries">
               <td>{{summary.epoch}}</td>
+              <td>{{summary.totalError}}</td>
               <td>{{summary.error}}</td>
               <td>{{summary.delta}}</td>
               <td>{{summary.size}}</td>

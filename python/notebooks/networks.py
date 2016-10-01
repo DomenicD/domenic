@@ -56,11 +56,23 @@ class NeuralNetwork:
     def get_parameters(self):
         return [layer.get_parameters() for layer in self.layers]
 
-    def forward_pass(self, inputs: Sequence[float]):
+    def forward_pass(self, inputs: Sequence[float]) -> Sequence[float]:
         self.forward_pass_tally += 1
+        return self.do_forward_pass(inputs)
 
-    def backward_pass(self, expected: Sequence[float]):
+    def backward_pass(self, expected: Sequence[float]) -> float:
         self.backward_pass_tally += 1
+        error = self.do_backward_pass(expected)
+        self.total_error += error
+        return error
+
+    @abstractmethod
+    def do_forward_pass(self, inputs: Sequence[float]) -> Sequence[float]:
+        pass
+
+    @abstractmethod
+    def do_backward_pass(self, expected: Sequence[float]) -> float:
+        pass
 
 
 class FeedForward(NeuralNetwork):
@@ -68,17 +80,17 @@ class FeedForward(NeuralNetwork):
         super().__init__(layers)
         self.cost = cost
 
-    def forward_pass(self, inputs: Sequence[float]):
-        super(FeedForward, self).forward_pass(inputs)
+    def do_forward_pass(self, inputs: Sequence[float]) -> Sequence[float]:
         for layer in self.layers:
             inputs = layer.forward_pass(inputs)
+        return inputs
 
-    def backward_pass(self, expected: Sequence[float]):
-        super(FeedForward, self).backward_pass(expected)
-        self.total_error += sum(self.cost.apply(self.outputs, expected))
+    def do_backward_pass(self, expected: Sequence[float]) -> float:
+        error = sum(self.cost.apply(self.outputs, expected))
         upstream_derivative = np.matrix(self.cost.apply_derivative(self.outputs, expected))
         for layer in reversed(self.layers):
             upstream_derivative = layer.backward_pass(upstream_derivative)
+        return error
 
 
 # TODO: Legacy code. Need to update to use new pattern.

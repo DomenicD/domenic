@@ -117,6 +117,7 @@ class ErrorRegularizedParameterDeltaTransform(ParameterDeltaTransform):
 
     def __call__(self, parameter: Parameter) -> float:
         total_error = self.total_error_getter_function()
+        print(total_error)
         if total_error > abs(parameter.gradient):
             return parameter.gradient / total_error
         else:

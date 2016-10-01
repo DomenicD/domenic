@@ -38,15 +38,17 @@ export class TrainingSummary {
   constructor(epoch: number, error: number, lastError: number) {
     this.epoch = format(epoch);
     this.error = format(error);
-    this.delta = format(error - lastError);
+    this.delta = format(((error - lastError) / lastError) * 100) + '%';
   }
 }
 
 export class BatchSummary extends TrainingSummary {
   size: string;
+  totalError: string;
   constructor(batchResult: TrainerBatchResult, lastBatchError: number) {
     super(batchResult.batchNumber, batchResult.avgError, lastBatchError);
     this.size = format(batchResult.batchSize);
+    this.totalError = format(batchResult.totalError);
   }
 }
 

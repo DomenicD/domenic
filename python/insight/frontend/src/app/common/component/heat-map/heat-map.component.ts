@@ -4,12 +4,9 @@ import {
   ViewEncapsulation,
   Input,
   EventEmitter,
-  Pipe,
-  PipeTransform,
   Output
 } from '@angular/core';
 import {getDefault} from "../../util/collection";
-import {Subscription} from "rxjs/Rx";
 
 export enum HeatMapMode {
   LOCAL,
@@ -18,7 +15,7 @@ export enum HeatMapMode {
 
 const DEFAULT_HISTORY = 100;
 const DEFAULT_MODE = HeatMapMode.LOCAL;
-const DEFAULT_USE_LOG_SCALE = false;
+const DEFAULT_USE_LOG_SCALE = true;
 
 export class HeatMapCell {
   relativeValue: number = 0;

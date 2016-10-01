@@ -37,7 +37,7 @@
 
       </div>
       <div class="heat-map-container layout horizontal">
-        <app-heat-map class="heat-map flex-1"
+        <app-heat-map class="heat-map flex-3"
                       [heatMap]="heatMap"
                       [mode]="heatMapMode.value"
                       [visibleRows]="visibleMetrics"
@@ -46,7 +46,7 @@
                       [useLogScale]="useLogScale"
                       (onGroupColumnSelection)="onGroupColumnSelection($event)"></app-heat-map>
 
-        <div class="group-column-details flex-1" *ngIf="detail != null">
+        <div class="group-column-details flex-2" *ngIf="detail != null">
           <h3>Parameter details</h3>
           <table>
             <tr>
@@ -74,13 +74,13 @@
           <table>
             <tr>
               <td class="detail-label">Name</td>
+              <td class="detail-label">Input</td>
               <td class="detail-label">Output</td>
-              <td class="detail-label">Diff</td>
             </tr>
             <tr *ngFor="let step of detail.delta.steps">
               <td class="detail-data">{{step.name}}</td>
+              <td class="detail-data">{{step.input}}</td>
               <td class="detail-data">{{step.output}}</td>
-              <td class="detail-data">{{step.output - step.input}}</td>
             </tr>
           </table>
         </div>
