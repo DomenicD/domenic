@@ -5,8 +5,8 @@ import numpy as np
 from python.notebooks.domain_objects import ParameterSet, parameter_set_map, Parameter, Delta
 from python.notebooks.parameter_updaters import ParameterUpdater, \
     DeltaParameterUpdateStep, ScaledGradientParameterDeltaTransform, \
-    ErrorRegularizedParameterDeltaTransform, \
-    LogarithmicScaleParameterDeltaTransform, LargestEffectFilteringParameterUpdateStep
+    ErrorRegularizedGradient, \
+    LogScaledDelta, LargestEffectOnly
 
 
 class ParameterUpdaterTest(unittest.TestCase):
@@ -26,7 +26,7 @@ class ParameterUpdaterTest(unittest.TestCase):
 class DeltaTransformTest(unittest.TestCase):
     def test_error_regularized(self):
         total_error = 5
-        transformer = ErrorRegularizedParameterDeltaTransform(
+        transformer = ErrorRegularizedGradient(
             total_error_getter=lambda: total_error)
 
         parameter = Parameter("set_a", 1, 4, -10, Delta())
@@ -38,7 +38,7 @@ class DeltaTransformTest(unittest.TestCase):
         self.assertEqual(result, -.2)
 
     def test_logarithmic_scale(self):
-        transformer = LogarithmicScaleParameterDeltaTransform()
+        transformer = LogScaledDelta()
         parameter = Parameter("set_a", 1, 4, -10, Delta())
 
         result = transformer(parameter)
@@ -55,7 +55,7 @@ class DeltaTransformTest(unittest.TestCase):
 
 class LargestEffectFilteringParameterUpdateStepTest(unittest.TestCase):
     def test_filter_none(self):
-        filter_step = LargestEffectFilteringParameterUpdateStep(keep_rate=1)
+        filter_step = LargestEffectOnly(keep_rate=1)
         parameter_set = ParameterSet("param_1", [[1, 1, 1], [1, 1, 1]],
                                      [[5, 10, -5], [0, 100, -50]])
         parameters = filter_step(parameter_set.parameters)
@@ -63,14 +63,14 @@ class LargestEffectFilteringParameterUpdateStepTest(unittest.TestCase):
             self.assertIn(p, parameters)
 
     def test_filter_all(self):
-        filter_step = LargestEffectFilteringParameterUpdateStep(keep_rate=0)
+        filter_step = LargestEffectOnly(keep_rate=0)
         parameter_set = ParameterSet("param_1", [[1, 1, 1], [1, 1, 1]],
                                      [[5, 10, -5], [0, 100, -50]])
         parameters = filter_step(parameter_set.parameters)
         self.assertEqual(len(parameters), 0)
 
     def test_keep_top_third(self):
-        filter_step = LargestEffectFilteringParameterUpdateStep(keep_rate=.33)
+        filter_step = LargestEffectOnly(keep_rate=.33)
         parameter_set = ParameterSet("param_1", [[1, 1, 1], [1, 1, 1]],
                                      [[5, 10, -5], [0, 100, -50]])
         parameters = filter_step(parameter_set.parameters)

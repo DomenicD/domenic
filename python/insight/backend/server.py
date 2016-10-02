@@ -1,7 +1,7 @@
 from flask import Flask, send_from_directory, request, Response, json
 from flask_cors import CORS
 
-from python.notebooks.assembled_models import quadratic_feed_forward_network
+import python.notebooks.assembled_models as am
 from python.notebooks.serializers import serialize
 from python.notebooks.trainers import ClosedFormFunctionTrainer
 
@@ -11,6 +11,11 @@ CORS(app)
 global_cache = {}
 
 
+@app.route('/updater_keys', methods=["GET"])
+def updater_keys():
+    return create_response([key for key in am.updaters.keys()])
+
+
 @app.route('/create_network', methods=["POST"])
 def create_network():
     layers = request.json["layers"]
@@ -18,8 +23,7 @@ def create_network():
     options = request.json["options"]
 
     if network_type == "QUADRATIC_FEED_FORWARD":
-        network = quadratic_feed_forward_network(
-            layers, param_update_rate=options["paramUpdateRate"])
+        network = am.quadratic_feed_forward_network(layers, options["updater"])
     else:
         raise ValueError(network_type + " is not implemented")
 

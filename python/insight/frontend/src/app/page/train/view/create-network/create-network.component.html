@@ -6,9 +6,13 @@
       </paper-listbox>
     </paper-dropdown-menu>
 
-    <paper-input label="Layers" [(value)]="layers"></paper-input>
+    <paper-dropdown-menu label="Updater">
+      <paper-listbox class="dropdown-content" [(selected)]="selectedUpdaterIndex">
+        <paper-item *ngFor="let item of updaters">{{item}}</paper-item>
+      </paper-listbox>
+    </paper-dropdown-menu>
 
-    <paper-input label="Param Update Rate" [(value)]="paramUpdateRate"></paper-input>
+    <paper-input label="Layers" [(value)]="layers"></paper-input>
   </div>
 
   <div class="card-actions">

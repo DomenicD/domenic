@@ -33,13 +33,14 @@ export class CreateNetworkComponent implements OnInit {
       new UiFriendlyEnum<NetworkType>(NetworkType);
 
   layers: string = "";
-  paramUpdateRate: number;
+  updaters: string[] = [];
+  selectedUpdaterIndex: number = 0;
 
   @Output() onCreated = new EventEmitter<NeuralNetworkDomain>();
 
   constructor(private api: InsightApiService) {
     this.networkType.value = NetworkType.QUADRATIC_FEED_FORWARD;
-    this.paramUpdateRate = .5;
+    this.api.updaterKeys().subscribe(keys => this.updaters = keys);
   }
 
   ngOnInit() {}
@@ -63,7 +64,7 @@ export class CreateNetworkComponent implements OnInit {
     this.isCreating = true;
     this.api
         .createNetwork(this.layers.split(","), this.networkType.value,
-                       {paramUpdateRate : toNumber(this.paramUpdateRate)})
+                       {updater : this.updaters[this.selectedUpdaterIndex]})
         .subscribe(network => {this.onCreated.emit(network)},
                    error => { this.isCreating = false; });
   }

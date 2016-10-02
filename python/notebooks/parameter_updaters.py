@@ -16,7 +16,7 @@ class ParameterUpdateStep:
 class ParameterUpdater:
     def __init__(self, steps: List[ParameterUpdateStep]):
         self.steps = steps.copy()
-        self.steps.append(DeltaParameterUpdateStep(NegativeParameterDeltaTransform()))
+        self.steps.append(DeltaParameterUpdateStep(ToNegative()))
 
     def adjust(self,
                param_set_maps: Sequence[Mapping[str, ParameterSet]]) -> Mapping[str, ParameterSet]:
@@ -63,6 +63,15 @@ class ParameterDeltaTransform:
 
 
 class DeltaParameterUpdateStep(ParameterUpdateStep):
+
+    @staticmethod
+    def of(transform: ParameterDeltaTransform):
+        return DeltaParameterUpdateStep(transform)
+
+    @staticmethod
+    def foreach(*transforms: Sequence[ParameterDeltaTransform]):
+        return [DeltaParameterUpdateStep.of(transform) for transform in transforms]
+
     def __init__(self, transform: ParameterDeltaTransform):
         self.transform = transform
 
@@ -74,19 +83,19 @@ class DeltaParameterUpdateStep(ParameterUpdateStep):
         return parameters
 
 
-class NegativeParameterDeltaTransform(ParameterDeltaTransform):
+class ToNegative(ParameterDeltaTransform):
     @property
     def name(self):
-        return 'Negative delta'
+        return 'To negative'
 
     def __call__(self, parameter: Parameter) -> float:
         return -parameter.delta.value
 
 
-class FlatScaleParameterDeltaTransform(ParameterDeltaTransform):
+class FlatLearningRate(ParameterDeltaTransform):
     @property
     def name(self):
-        return 'Flat scaled delta'
+        return 'Flat learning rate'
 
     def __init__(self, learning_rate: float):
         self.learning_rate = learning_rate
@@ -95,19 +104,7 @@ class FlatScaleParameterDeltaTransform(ParameterDeltaTransform):
         return self.learning_rate * parameter.delta.value
 
 
-class ScaledGradientParameterDeltaTransform(ParameterDeltaTransform):
-    @property
-    def name(self):
-        return 'Flat scaled gradient'
-
-    def __init__(self, learning_rate: float):
-        self.learning_rate = learning_rate
-
-    def __call__(self, parameter: Parameter) -> float:
-        return self.learning_rate * parameter.gradient
-
-
-class ErrorRegularizedParameterDeltaTransform(ParameterDeltaTransform):
+class ErrorRegularizedGradient(ParameterDeltaTransform):
     @property
     def name(self):
         return 'Error regularized gradient'
@@ -117,26 +114,31 @@ class ErrorRegularizedParameterDeltaTransform(ParameterDeltaTransform):
 
     def __call__(self, parameter: Parameter) -> float:
         total_error = self.total_error_getter_function()
-        print(total_error)
-        if total_error > abs(parameter.gradient):
-            return parameter.gradient / total_error
-        else:
-            return total_error / parameter.gradient
+        return parameter.gradient / total_error
 
 
-class LogarithmicScaleParameterDeltaTransform(ParameterDeltaTransform):
+class FlatGradient(ParameterDeltaTransform):
     @property
     def name(self):
-        return 'Logarithmic scaled delta'
+        return 'Flat gradient'
+
+    def __call__(self, parameter: Parameter) -> float:
+        return parameter.gradient
+
+
+class LogScaledDelta(ParameterDeltaTransform):
+    @property
+    def name(self):
+        return 'Log scaled delta'
 
     def __call__(self, parameter: Parameter) -> float:
         return np.sign(parameter.delta.value) * np.log(1 + abs(parameter.delta.value))
 
 
-class LargestEffectFilteringParameterUpdateStep(ParameterUpdateStep):
+class LargestEffectOnly(ParameterUpdateStep):
     @property
     def name(self):
-        return 'Largest effect filter'
+        return 'Largest effect only'
 
     def __init__(self, keep_rate: float):
         self.keep_rate = keep_rate
@@ -145,5 +147,6 @@ class LargestEffectFilteringParameterUpdateStep(ParameterUpdateStep):
         sorted_parameters = sorted(parameters, key=lambda p: -abs(p.gradient))
         cutoff = int(np.ceil(len(sorted_parameters) * self.keep_rate))
         for parameter in sorted_parameters[cutoff:]:
+            parameter.delta.value = 0
             parameter.delta.add_step(DeltaStep(self.name, parameter.delta.value, 0))
-        return sorted_parameters[:cutoff]
+        return sorted_parameters
