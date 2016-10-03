@@ -2,8 +2,8 @@ import unittest
 
 import numpy as np
 
-from python.notebooks.domain_objects import ParameterSet, parameter_set_map, Parameter, Delta
-from python.notebooks.parameter_updaters import ParameterUpdater, \
+from modeling.domain_objects import ParameterSet, parameter_set_map, Parameter, Delta
+from modeling.parameter_updaters import ParameterUpdater, \
     DeltaParameterUpdateStep, ScaledGradientParameterDeltaTransform, \
     ErrorRegularizedGradient, \
     LogScaledDelta, LargestGradientsOnly

@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod, abstractproperty
 from collections import deque
 from typing import Sequence, Callable, Mapping, List
 
-from python.notebooks.domain_objects import ParameterSet, Parameter, DeltaStep
+from modeling.domain_objects import ParameterSet, Parameter, DeltaStep
 import numpy as np
 import re
 
@@ -236,7 +236,7 @@ class AdaptiveGradientDerivative(ParameterUpdateStep):
                       for i in range(history_length - 1))
 
         error_delta = (self.error_history[0] - self.error_history[1]) / self.error_history[1]
-        over_error_threshold = error_delta > .5
+        over_error_threshold = error_delta > 1
 
         if all_bad or over_error_threshold:
             self._reset(parameters)

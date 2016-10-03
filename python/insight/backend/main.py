@@ -1,9 +1,9 @@
 from flask import Flask, send_from_directory, request, Response, json
 from flask_cors import CORS
 
-import python.notebooks.assembled_models as am
-from python.notebooks.serializers import serialize
-from python.notebooks.trainers import ClosedFormFunctionTrainer
+import modeling.assembled_models as am
+from modeling.serializers import serialize
+from modeling.trainers import ClosedFormFunctionTrainer
 
 app = Flask(__name__)
 CORS(app)
@@ -70,4 +70,4 @@ def create_response(data):
 
 
 if __name__ == "__main__":
-    app.run()
+    app.run(host='0.0.0.0')

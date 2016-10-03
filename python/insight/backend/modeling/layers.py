@@ -3,10 +3,10 @@ from typing import Mapping, Sequence
 
 import numpy as np
 
-from python.notebooks.activation_functions import Activation, IdentityActivation
-from python.notebooks.domain_objects import ParameterSet, parameter_set_map
-from python.notebooks.parameter_generators import ParameterGenerator, ConstantParameterGenerator
-from python.notebooks.parameter_updaters import ParameterUpdater
+from modeling.activation_functions import Activation, IdentityActivation
+from modeling.domain_objects import ParameterSet, parameter_set_map
+from modeling.parameter_generators import ParameterGenerator, ConstantParameterGenerator
+from modeling.parameter_updaters import ParameterUpdater
 
 
 class Layer:

@@ -1,13 +1,13 @@
 from abc import abstractmethod, ABCMeta
 from typing import Sequence
 
-from python.notebooks.layers import QuadraticLayer
-from python.notebooks.networks import FeedForward
-from python.notebooks.parameter_generators import RandomParameterGenerator
-from python.notebooks.parameter_updaters import ParameterUpdater, \
+from modeling.layers import QuadraticLayer
+from modeling.networks import FeedForward
+from modeling.parameter_generators import RandomParameterGenerator
+from modeling.parameter_updaters import ParameterUpdater, \
     LargestGradientsOnly, DeltaParameterUpdateStep, \
     ErrorRegularizedGradient, LogScaledDelta, FlatGradient, FlatLearningRate, Momentum, \
-    AdaptiveGradientDerivative, LargestDeltasOnly, LargestGradientsFilter, LargestDeltasFilter
+    AdaptiveGradientDerivative
 
 updaters = {}
 

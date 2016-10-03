@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 import numpy as np
 
-from python.notebooks.utils import same_type, same_size
+from modeling.utils import same_type, same_size
 
 
 class Activation:

@@ -2,13 +2,13 @@ import unittest
 
 import numpy as np
 
-from python.notebooks.activation_functions import RectifiedLinearUnitActivation
-from python.notebooks.cost_functions import QuadraticCost
-from python.notebooks.layers import QuadraticLayer
-from python.notebooks.networks import SimpleFeedForward, FeedForward
-from python.notebooks.parameter_generators import ConstantParameterGenerator, \
+from modeling.activation_functions import RectifiedLinearUnitActivation
+from modeling.cost_functions import QuadraticCost
+from modeling.layers import QuadraticLayer
+from modeling.networks import SimpleFeedForward, FeedForward
+from modeling.parameter_generators import ConstantParameterGenerator, \
     SequenceParameterGenerator
-from python.notebooks.parameter_updaters import ParameterUpdater
+from modeling.parameter_updaters import ParameterUpdater
 
 
 class FeedForwardTest(unittest.TestCase):

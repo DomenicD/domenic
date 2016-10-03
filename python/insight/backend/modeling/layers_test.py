@@ -2,8 +2,8 @@ import unittest
 
 import numpy as np
 
-from python.notebooks.layers import QuadraticLayer
-from python.notebooks.parameter_updaters import ParameterUpdater
+from modeling.layers import QuadraticLayer
+from modeling.parameter_updaters import ParameterUpdater
 
 
 class QuadraticLayerTest(unittest.TestCase):

@@ -5,7 +5,7 @@ from typing import Callable, Sequence, Tuple
 
 import numpy as np
 
-from python.notebooks.networks import NeuralNetwork
+from modeling.networks import NeuralNetwork
 
 
 class BatchStepResult:

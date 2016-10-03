@@ -3,12 +3,12 @@ from abc import ABCMeta, abstractmethod
 from typing import Sequence, Mapping
 import numpy as np
 
-from python.notebooks.activation_functions import Activation
-from python.notebooks.cost_functions import Cost, QuadraticCost
-from python.notebooks.domain_objects import ParameterSet
-from python.notebooks.layers import Layer
-from python.notebooks.parameter_generators import ParameterGenerator, RandomParameterGenerator
-from python.notebooks.utils import pretty_print
+from modeling.activation_functions import Activation
+from modeling.cost_functions import Cost, QuadraticCost
+from modeling.domain_objects import ParameterSet
+from modeling.layers import Layer
+from modeling.parameter_generators import ParameterGenerator, RandomParameterGenerator
+from modeling.utils import pretty_print
 
 
 class NeuralNetwork:

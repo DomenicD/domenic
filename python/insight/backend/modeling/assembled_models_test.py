@@ -3,8 +3,8 @@ from typing import Sequence
 
 import numpy as np
 
-from python.notebooks.assembled_models import quadratic_feed_forward_network
-from python.notebooks.trainers import ClosedFormFunctionTrainer, TrainingPlan
+from modeling.assembled_models import quadratic_feed_forward_network
+from modeling.trainers import ClosedFormFunctionTrainer, TrainingPlan
 
 
 def simple_polynomial(x_list: Sequence[float]) -> Sequence[float]:

@@ -2,9 +2,9 @@ from typing import Any, Mapping
 import numpy as np
 import collections
 
-from python.notebooks.domain_objects import ParameterSet, DeltaStep, Delta
-from python.notebooks.networks import NeuralNetwork
-from python.notebooks.trainers import BatchResult, Trainer, ValidationResult
+from modeling.domain_objects import ParameterSet, DeltaStep, Delta
+from modeling.networks import NeuralNetwork
+from modeling.trainers import BatchResult, Trainer, ValidationResult
 
 serialize_map = {}
 
