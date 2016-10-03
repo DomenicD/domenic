@@ -1,12 +1,13 @@
-from abc import abstractproperty, abstractmethod, ABCMeta
-from typing import Sequence, Callable
+from abc import abstractmethod, ABCMeta
+from typing import Sequence
 
 from python.notebooks.layers import QuadraticLayer
 from python.notebooks.networks import FeedForward
 from python.notebooks.parameter_generators import RandomParameterGenerator
 from python.notebooks.parameter_updaters import ParameterUpdater, \
-    LargestEffectOnly, DeltaParameterUpdateStep, \
-    ErrorRegularizedGradient, LogScaledDelta, FlatGradient, FlatLearningRate
+    LargestGradientsOnly, DeltaParameterUpdateStep, \
+    ErrorRegularizedGradient, LogScaledDelta, FlatGradient, FlatLearningRate, Momentum, \
+    AdaptiveGradientDerivative, LargestDeltasOnly, LargestGradientsFilter, LargestDeltasFilter
 
 updaters = {}
 
@@ -31,15 +32,30 @@ class SimpleUpdater(FeedForwardUpdater):
         steps = DeltaParameterUpdateStep.foreach(
             FlatGradient(),
             LogScaledDelta(),
-            FlatLearningRate(learning_rate))
+            FlatLearningRate(learning_rate),
+            Momentum([.9, .1]))
 
         # Only update the parameters that contributed most to the error.
-        steps.append(LargestEffectOnly(keep_rate=keep_rate))
+        steps.append(LargestGradientsOnly(keep_rate=keep_rate))
         return ParameterUpdater(steps)
 
 
 simple_updater = SimpleUpdater()
 updaters[simple_updater.name] = simple_updater
+
+
+class AdaptiveUpdater(FeedForwardUpdater):
+    def create(self, network: FeedForward):
+        def total_error_getter(): return network.total_error / network.forward_pass_tally
+
+        return ParameterUpdater([
+            # LargestGradientsFilter(),
+            AdaptiveGradientDerivative(total_error_getter=total_error_getter)
+        ])
+
+
+adaptive_updater = AdaptiveUpdater()
+updaters[adaptive_updater.name] = adaptive_updater
 
 
 class ErrorRegularizedUpdater(FeedForwardUpdater):
@@ -50,10 +66,11 @@ class ErrorRegularizedUpdater(FeedForwardUpdater):
 
         steps = DeltaParameterUpdateStep.foreach(
             ErrorRegularizedGradient(total_error_getter=total_error_getter),
-            LogScaledDelta())
+            LogScaledDelta(),
+            Momentum([.9, .1]))
 
         # Only update the parameters that contributed most to the error.
-        steps.append(LargestEffectOnly(keep_rate=keep_rate))
+        steps.append(LargestGradientsOnly(keep_rate=keep_rate))
         return ParameterUpdater(steps)
 
 

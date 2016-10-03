@@ -6,7 +6,7 @@ from python.notebooks.domain_objects import ParameterSet, parameter_set_map, Par
 from python.notebooks.parameter_updaters import ParameterUpdater, \
     DeltaParameterUpdateStep, ScaledGradientParameterDeltaTransform, \
     ErrorRegularizedGradient, \
-    LogScaledDelta, LargestEffectOnly
+    LogScaledDelta, LargestGradientsOnly
 
 
 class ParameterUpdaterTest(unittest.TestCase):
@@ -55,7 +55,7 @@ class DeltaTransformTest(unittest.TestCase):
 
 class LargestEffectFilteringParameterUpdateStepTest(unittest.TestCase):
     def test_filter_none(self):
-        filter_step = LargestEffectOnly(keep_rate=1)
+        filter_step = LargestGradientsOnly(keep_rate=1)
         parameter_set = ParameterSet("param_1", [[1, 1, 1], [1, 1, 1]],
                                      [[5, 10, -5], [0, 100, -50]])
         parameters = filter_step(parameter_set.parameters)
@@ -63,14 +63,14 @@ class LargestEffectFilteringParameterUpdateStepTest(unittest.TestCase):
             self.assertIn(p, parameters)
 
     def test_filter_all(self):
-        filter_step = LargestEffectOnly(keep_rate=0)
+        filter_step = LargestGradientsOnly(keep_rate=0)
         parameter_set = ParameterSet("param_1", [[1, 1, 1], [1, 1, 1]],
                                      [[5, 10, -5], [0, 100, -50]])
         parameters = filter_step(parameter_set.parameters)
         self.assertEqual(len(parameters), 0)
 
     def test_keep_top_third(self):
-        filter_step = LargestEffectOnly(keep_rate=.33)
+        filter_step = LargestGradientsOnly(keep_rate=.33)
         parameter_set = ParameterSet("param_1", [[1, 1, 1], [1, 1, 1]],
                                      [[5, 10, -5], [0, 100, -50]])
         parameters = filter_step(parameter_set.parameters)

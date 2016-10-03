@@ -6,6 +6,7 @@
           <colgroup>
             <col name="Epoch">
             <col name="Batch Error">
+            <col name="Batch Delta">
             <col name="Validation Error">
             <col name="Validation Delta">
           </colgroup>
@@ -13,6 +14,7 @@
           <tr *ngFor="let summary of validationSummaries">
             <td>{{summary.epoch}}</td>
             <td>{{summary.batchError}}</td>
+            <td>{{summary.batchDelta}}</td>
             <td>{{summary.validationError}}</td>
             <td>{{summary.validationDelta}}</td>
           </tr>

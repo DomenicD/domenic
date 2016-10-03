@@ -33,12 +33,15 @@ export class GoogleChart<T> {
 export class TrainingSummary {
   epoch: string;
   batchError: string;
+  batchDelta: string;
   validationError: string;
   validationDelta: string;
-  constructor(epoch: number, batchError: number, validationError: number,
-              lastValidationError: number) {
+  constructor(epoch: number, batchError: number, lastBatchError: number,
+              validationError: number, lastValidationError: number) {
     this.epoch = formatNumber(epoch);
     this.batchError = formatNumber(batchError);
+    this.batchDelta = formatPercent(
+        (batchError - lastBatchError) / lastBatchError);
     this.validationError = formatNumber(validationError);
     this.validationDelta = formatPercent(
         (validationError - lastValidationError) / lastValidationError);
@@ -62,6 +65,7 @@ export class SummaryComponent implements OnInit,
   private lastValidationResult: TrainerValidationResult;
 
   validationSummaries: TrainingSummary[] = [];
+  batchError: number = 0;
   validationError: number = 0;
 
   @ViewChild('batchChart') batchChartContainer: ElementRef;
@@ -103,7 +107,8 @@ export class SummaryComponent implements OnInit,
                              validationResult: TrainerValidationResult) {
     this.validationSummaries.unshift(
         new TrainingSummary(batchResult.batchNumber, batchResult.avgError,
-                            validationResult.error, this.validationError));
+          this.batchError, validationResult.error, this.validationError));
+    this.batchError = batchResult.avgError;
     this.validationError = validationResult.error;
     this.updateValidationChart(validationResult);
   }

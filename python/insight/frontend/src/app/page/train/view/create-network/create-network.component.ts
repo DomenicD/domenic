@@ -32,7 +32,7 @@ export class CreateNetworkComponent implements OnInit {
   networkType: UiFriendlyEnum<NetworkType> =
       new UiFriendlyEnum<NetworkType>(NetworkType);
 
-  layers: string = "";
+  layers: string = "1,3,3,1";
   updaters: string[] = [];
   selectedUpdaterIndex: number = 0;
 
