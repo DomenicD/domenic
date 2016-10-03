@@ -13,7 +13,7 @@ export enum HeatMapMode {
   GLOBAL
 }
 
-const DEFAULT_HISTORY = 100;
+const DEFAULT_HISTORY = 50;
 const DEFAULT_MODE = HeatMapMode.LOCAL;
 const DEFAULT_USE_LOG_SCALE = true;
 
@@ -34,15 +34,18 @@ export class HeatMapRow {
   visibleCells: HeatMapCell[] = [];
 
   private cells: HeatMapCell[] = [];
+  private _count: number = 0;
 
   constructor(public name: string) {}
 
-  get count(): number { return this.cells.length; }
+  get count(): number { return this._count; }
 
   addValue(value: number) {
     this.cells.unshift(new HeatMapCell(value));
+    this._count++;
     if (this.cells.length > this.history) {
-      this.updateLocalMinMax(value, this.cells[this.history].actualValue);
+      let removed = this.cells.pop();
+      this.updateLocalMinMax(value, removed.actualValue);
     } else {
       this.updateLocalMinMax(value);
     }
@@ -316,8 +319,8 @@ export class HeatMapComponent implements OnInit {
     return this.visibleRows.indexOf(row.name) > -1;
   }
 
-  selectGroupColumn(group: HeatMapGroup, row: HeatMapRow, column: number) {
-    let event = new GroupColumnSelectionEvent(group.name, row.name, column);
+  selectGroupColumn(groupName: string, rowName: string, column: number) {
+    let event = new GroupColumnSelectionEvent(groupName, rowName, column);
     this.selectedGroup = event.groupName;
     this.selectedColumn = event.column;
     this.onGroupColumnSelection.emit(event);

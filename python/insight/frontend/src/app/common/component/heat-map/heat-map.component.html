@@ -37,7 +37,7 @@
                  [class.first]="firstRow"
                  [class.last]="lastRow"
                  [style.background-color]="getColor(cell, rowIndex)"
-                 (click)="selectGroupColumn(group, row, row.count - cellIndex)"
+                 (click)="selectGroupColumn(group.name, row.name, row.count - cellIndex)"
                  title="{{cell.actualValue.toLocaleString()}}">
             </div>
           </div>

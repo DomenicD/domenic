@@ -29,9 +29,9 @@ export class CreateTrainerComponent implements OnInit {
   trainerType: UiFriendlyEnum<TrainerType> =
       new UiFriendlyEnum<TrainerType>(TrainerType);
   lambda: string = "lambda x: x**3 - x**2 + x + 1";
-  domainMin: number = -30;
-  domainMax: number = 30;
-  batchSize: number = 200;
+  domainMin: number = -10;
+  domainMax: number = 10;
+  batchSize: number = 100;
 
   @Input() network: NeuralNetworkDomain;
   @Output() onCreated = new EventEmitter<TrainerDomain>();

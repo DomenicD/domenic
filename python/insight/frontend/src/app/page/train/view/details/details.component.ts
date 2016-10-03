@@ -1,4 +1,4 @@
-import {Component, OnInit, Input, ViewEncapsulation} from '@angular/core';
+import {Component, OnInit, Input, ViewEncapsulation, ViewChild} from '@angular/core';
 import {Subscription} from "rxjs";
 import {
   TrainerBatchResult,
@@ -59,6 +59,9 @@ export class DetailsComponent implements OnInit {
   showParameterNames: boolean = false;
   showParameterDivider: boolean = true;
   useLogScale: boolean = true;
+
+  @ViewChild(HeatMapComponent)
+  heatMapComponent: HeatMapComponent;
 
   private _trainer: TrainerDomain;
   private batchResultSubscription: Subscription;
@@ -134,10 +137,14 @@ export class DetailsComponent implements OnInit {
           this.heatMap.getGroup(groupName)
               .getRow(WEIGHT_ROW_NAME)
               .addValue(weight);
-          var detail = new ParameterDetail(batchResult.batchNumber, groupName,
+          let epoch = batchResult.batchNumber;
+          let detail = new ParameterDetail(epoch, groupName,
                                            delta, gradient, weight);
           this.parameterDetails.set(
               this.parameterDetailKey(detail.name, detail.epoch), detail);
+          if (this.detail == null) {
+            this.heatMapComponent.selectGroupColumn(groupName, DELTA_ROW_NAME, epoch);
+          }
         }
       }
     }

@@ -19,13 +19,17 @@ export class InsightApiService {
   constructor(@Inject(ApiUrl) private apiUrl: string, private http: Http) {}
 
   updaterKeys(): Observable<string[]> {
-    return this.postRequestProcessing(this.http.get(this.url('updater_keys')));
+    return this.postRequestProcessing<string[]>(this.http.get(this.url('updater_keys')))
+      .map(k => {
+        k.sort();
+        return k;
+    });
   }
 
   createNetwork(layers: string[] | number[], type: NetworkType,
                 options: Object): Observable<NeuralNetworkDomain> {
     return this
-        .postRequestProcessing(this.http.post(
+        .postRequestProcessing<NeuralNetworkDomain>(this.http.post(
             this.url('create_network'),
             {layers : toNumbers(layers), type : NetworkType[type], options}))
         .map(result => new NeuralNetworkDomain(this, result));
@@ -34,7 +38,7 @@ export class InsightApiService {
   createTrainer(network: NeuralNetwork, type: TrainerType,
                 options: Object): Observable<TrainerDomain> {
     return this
-        .postRequestProcessing(this.http.post(
+        .postRequestProcessing<TrainerDomain>(this.http.post(
             this.url('create_trainer'),
             {networkId : network.id, type : TrainerType[type], options}))
         .map(result => new TrainerDomain(this, result));
@@ -52,11 +56,11 @@ export class InsightApiService {
 
   private remoteCommand<T>(targetId: string, command: string,
                            args: any[]): Observable<T> {
-    return this.postRequestProcessing(
+    return this.postRequestProcessing<T>(
         this.http.post(this.url('remote_command', targetId, command), {args}));
   }
 
-  private postRequestProcessing(response: Observable<Response>) {
+  private postRequestProcessing<T>(response: Observable<Response>): Observable<T>{
     return Observable.from(response.map(r => r.json()));
   }
 

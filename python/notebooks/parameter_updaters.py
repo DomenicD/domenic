@@ -240,7 +240,6 @@ class AdaptiveGradientDerivative(ParameterUpdateStep):
 
         if all_bad or over_error_threshold:
             self._reset(parameters)
-            print('reset')
 
     def get_delta(self, parameter: Parameter) -> float:
         derivative = self._get_derivative(parameter)
@@ -273,12 +272,10 @@ class AdaptiveGradientDerivative(ParameterUpdateStep):
     def _decrease_rate(self, parameter: Parameter):
         self._start_steps[parameter.name] *= .9
         self._grow_rates[parameter.name] *= .9
-        print('-', parameter.name)
 
     def _increase_rate(self, parameter: Parameter):
         self._start_steps[parameter.name] *= 1.01
         self._grow_rates[parameter.name] *= 1.01
-        print('+', parameter.name)
 
     def _reset(self, parameters: Sequence[Parameter]):
         for p in parameters:

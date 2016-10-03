@@ -16,6 +16,8 @@ import {Subscription} from "rxjs";
 import {PolymerElement} from "@vaadin/angular2-polymer";
 import {formatNumber, formatPercent} from "../../../../common/util/parse";
 
+const MAX_HISTORY = 50;
+
 export class GoogleChart<T> {
   private chart: google.visualization.ChartWrapper;
 
@@ -108,6 +110,10 @@ export class SummaryComponent implements OnInit,
     this.validationSummaries.unshift(
         new TrainingSummary(batchResult.batchNumber, batchResult.avgError,
           this.batchError, validationResult.error, this.validationError));
+    if (this.validationSummaries.length > MAX_HISTORY) {
+      this.validationSummaries.pop();
+    }
+
     this.batchError = batchResult.avgError;
     this.validationError = validationResult.error;
     this.updateValidationChart(validationResult);

@@ -58,7 +58,7 @@ export class ControlsComponent implements OnInit {
     }
     return Observable.fromPromise(this.trainingPromise)
       .map(_ => this.train())
-      .delay(500)
+      .delay(1500)
       .toPromise()
       .then(_ => this.autoTrain());
   }
