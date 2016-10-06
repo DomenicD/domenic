@@ -1,0 +1,54 @@
+\documentclass{article}
+
+\usepackage{amsmath}
+
+\title{High Capacity Neural Network}
+
+\date{2016-10-06}
+
+\author{Domenic Donato}
+
+\begin{document}
+
+\pagenumbering{gobble} 
+\maketitle
+\newpage
+\pagenumbering{arabic} 
+
+\section{Introduction}
+
+TODO(domenic): Write this section
+
+\section{Related Literature}
+
+TODO(domenic): Write this section
+
+\section{Model}
+
+TODO(domenic): Write this section
+
+\subsection{Forward Computation}
+
+A fully connected feedforward neural network was used with the only alteration being in the way inputs were transformed prior to being passed to the activation function.
+
+\begin{equation} \label{eq:standard_sum}
+\sum_i (w_i \cdot x_i + b_i)
+\end{equation}
+
+\begin{equation} \label{eq:quad_sum}
+\sum_i (w_i \cdot x_i + b_i)(r_i \cdot x_i + c_i)
+\end{equation}
+
+Rather than using the standard linear weighted sum, \eqref{eq:standard_sum}, a quadratic weighted sum, \eqref{eq:quad_sum} was used. This alteration is a superset of the standard design, which is apparent under the following conditions, $r = 0$ and $c = 1$. Although this change is small, it enables the neural network to represent any bounded degree polynomial over an infinite domain using a finite number of nodes. While the standard design would require an infinite number of nodes to satisfy the same requirement.
+
+\subsection{Backward Computation}
+
+\section{Experiments}
+
+TODO(domenic): Write this section
+
+\section{Conclusion}
+
+TODO(domenic): Write this section
+
+\end{document}
