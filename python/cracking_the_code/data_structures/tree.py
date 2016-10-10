@@ -1,3 +1,4 @@
+from collections import deque
 from enum import Enum
 from typing import TypeVar, Generic, Any, Callable
 from abc import ABCMeta, abstractmethod
@@ -45,6 +46,23 @@ class BinaryTree(Generic[T], metaclass=ABCMeta):
 
     def post_order(self, action: Callable[[T], None]):
         self._depth_traversal(self.root, TraversOrder.post_order, action)
+
+    def breadth_order(self, action: Callable[[T], None]):
+        if self.root is None:
+            return
+        visited = set()
+        queue = deque()
+        queue.append(self.root)
+        while len(queue) > 0:
+            node = queue.popleft()
+            if node in visited:
+                continue
+            action(node.data)
+            if node.left is not None:
+                queue.append(node.left)
+            if node.right is not None:
+                queue.append(node.right)
+            visited.add(node)
 
     def _depth_traversal(self, node: BinaryTreeNode[T], order: TraversOrder,
                          action: Callable[[T], None]):

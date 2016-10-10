@@ -67,3 +67,7 @@ class TreeTest(unittest.TestCase):
         arr = []
         bst.post_order(lambda n: arr.append(n))
         self.assertListEqual([2, 4, 3, 6, 9, 8, 10, 11, 7, 5], arr)
+
+        arr = []
+        bst.breadth_order(lambda n: arr.append(n))
+        self.assertListEqual([5, 3, 7, 2, 4, 6, 11, 10, 8, 9], arr)
