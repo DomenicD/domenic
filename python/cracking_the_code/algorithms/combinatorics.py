@@ -15,7 +15,7 @@ def combinations(seq: str, memory: set = set()):
 # Actual runtime: 2^n - 1
 def combinations_iter(seq: Sequence):
     memory = set()
-    memory.add(seq[0:0])
+    memory.add(seq[0:0])  # Add empty set
     for el in seq:
         for item in list(memory):
             memory.add(item + el)
