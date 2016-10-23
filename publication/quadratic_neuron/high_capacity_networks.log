@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (MiKTeX 2.9) (preloaded format=pdflatex 2016.10.6)  22 OCT 2016 17:03
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (MiKTeX 2.9) (preloaded format=pdflatex 2016.10.6)  22 OCT 2016 18:03
 entering extended mode
 **./high_capacity_networks.tex
 (high_capacity_networks.tex
@@ -135,6 +135,11 @@ Underfull \hbox (badness 10000) in paragraph at lines 98--99
 
  []
 
+
+Underfull \hbox (badness 10000) in paragraph at lines 100--101
+
+ []
+
 [2] (high_capacity_networks.aux) ) 
 Here is how much of TeX's memory you used:
  1141 strings out of 493334
@@ -156,7 +161,7 @@ cm/cmr7.pfb><C:/Program Files (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/c
 msy10.pfb><C:/Program Files (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cms
 y7.pfb><C:/Program Files (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/symbols/m
 sbm10.pfb>
-Output written on high_capacity_networks.pdf (3 pages, 115019 bytes).
+Output written on high_capacity_networks.pdf (3 pages, 115384 bytes).
 PDF statistics:
  56 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)

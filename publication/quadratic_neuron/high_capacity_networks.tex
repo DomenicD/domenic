@@ -79,13 +79,13 @@ Rather than using the standard transform, \eqref{eq:standard_transform}, a quadr
 
 \subsection{Backward Computation}
 
-The back propagation algorithm is slightly different from that of network using the standard transform. However, it is mostly the same. The total network error is calculated as follows:
+The total network error given a cost function $c(y, \hat{y})$ is:
 
 \begin{equation} \label{eq:total_error}
 E = \sum_i c(y_i, \hat{y_i})
 \end{equation}
 
-Where $c(y, \hat{y})$ is a cost function. For example, a squared error cost function would look like:
+A squared error cost function was used for the experiments in this paper.
 
 \begin{equation} \label{eq:squared_cost}
 c(y, \hat{y}) = \frac{(y - \hat{y})^2}{2}
@@ -95,16 +95,27 @@ c(y, \hat{y}) = \frac{(y - \hat{y})^2}{2}
 c'(y, \hat{y}) = y - \hat{y}
 \end{equation}
 
-The key thing about back propagation is that its a dynamic program and caches the part of the gradient calculation that will be used upstream.\\
+Back propagation was used to train the networks. The key thing about back propagation is that its a dynamic program and caches part of the gradient calculation so it can be reused upstream.\\
 
-$C_n$ is the matrix of cached calculations at level $n$
+$C_n$ is the matrix of cached calculations at level $n$\\
 
-$C_1 = c'(y, \hat{y})$
+The cache is seeded with the derivative of the cost function: 
+
+\begin{equation}
+C_1 = c'(y, \hat{y})
+\end{equation}
+
+At each layer the cache is updated as follows:
 
 \begin{equation}
 C_{n+1} = a'_n(x_n) \cdot (C_n \cdot t'_n(x_n)^\top)
 \end{equation}
 
+While visiting a layer, the gradients for each parameter in $\theta_n$ is calculated:
+
+\begin{equation}
+\delta\theta_n = \theta'_n \cdot C_n
+\end{equation}
 
 \section{Experiments}
 
