@@ -1,6 +1,8 @@
+
 \documentclass{article}
 
 \usepackage{amsmath}
+\usepackage{amssymb}
 
 \title{High Capacity Neural Network}
 
@@ -23,25 +25,86 @@ TODO(domenic): Write this section
 
 TODO(domenic): Write this section
 
-\section{Model}
-
-TODO(domenic): Write this section
-
 \subsection{Forward Computation}
 
-A fully connected feedforward neural network was used with the only alteration being in the way inputs were transformed prior to being passed to the activation function.
+The forward computation of a fully connected feedforward neural network with $N$ layers can be described as follows:
 
-\begin{equation} \label{eq:standard_sum}
-\sum_i (w_i \cdot x_i + b_i)
+\begin{equation}
+x_{n-1} = a_n(t_n(x_n))
 \end{equation}
 
-\begin{equation} \label{eq:quad_sum}
-\sum_i (w_i \cdot x_i + b_i)(r_i \cdot x_i + c_i)
+$\{N \in \mathbb{N} | N > 0\}$
+
+${n \in N}$
+
+$x_n$ is a vector
+
+$x_N$ is the input vector
+
+$\hat{y} = x_1$ is the output vector
+
+$t_n(x)$ is a transform function
+
+$a_n(x)$ is an activation function\\
+
+The standard transform function, $t_n(x)$, is:
+
+\begin{equation} \label{eq:standard_transform}
+t_n(x) = f_n(x)
 \end{equation}
 
-Rather than using the standard linear weighted sum, \eqref{eq:standard_sum}, a quadratic weighted sum, \eqref{eq:quad_sum} was used. This alteration is a superset of the standard design, which is apparent under the following conditions, $r = 0$ and $c = 1$. Although this change is small, it enables the neural network to represent any bounded degree polynomial over an infinite domain using a finite number of nodes. While the standard design would require an infinite number of nodes to satisfy the same requirement.
+\begin{equation} \label{eq:f}
+f_n(x) = x \cdot W_n + b_n
+\end{equation}
+
+$W_n \in \mathbb{R}^2$
+
+$b_n \in \mathbb{R}$\\
+
+The transform function proposed in this paper is:
+
+\begin{equation} \label{eq:quad_transform}
+t_n(x) =  f_n(x) \cdot g(x)
+\end{equation}
+
+\begin{equation} \label{eq:g}
+g_n(x) = x \cdot Y_n + c_n
+\end{equation}
+
+$Y_n \in \mathbb{R}^2$
+
+$c_n \in \mathbb{R}$\\
+
+Rather than using the standard transform, \eqref{eq:standard_transform}, a quadratic transform, \eqref{eq:quad_transform}, is performed. The quadratic transform is a superset of the standard design, which becomes apparent when $Y_n \in \{0,...,0\}$ and $c_n \in \{1, ..., 1\}$. Using a quadratic transformation enables the neural network to represent any bounded degree polynomial over an infinite domain using a finite number of nodes. The standard design would require an infinite number of nodes to do the same.
 
 \subsection{Backward Computation}
+
+The back propagation algorithm is slightly different from that of network using the standard transform. However, it is mostly the same. The total network error is calculated as follows:
+
+\begin{equation} \label{eq:total_error}
+E = \sum_i c(y_i, \hat{y_i})
+\end{equation}
+
+Where $c(y, \hat{y})$ is a cost function. For example, a squared error cost function would look like:
+
+\begin{equation} \label{eq:squared_cost}
+c(y, \hat{y}) = \frac{(y - \hat{y})^2}{2}
+\end{equation}
+
+\begin{equation} \label{eq:squared_cost_prime}
+c'(y, \hat{y}) = y - \hat{y}
+\end{equation}
+
+The key thing about back propagation is that its a dynamic program and caches the part of the gradient calculation that will be used upstream.\\
+
+$C_n$ is the matrix of cached calculations at level $n$
+
+$C_1 = c'(y, \hat{y})$
+
+\begin{equation}
+C_{n+1} = a'_n(x_n) \cdot (C_n \cdot t'_n(x_n)^\top)
+\end{equation}
+
 
 \section{Experiments}
 

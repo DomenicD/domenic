@@ -2,7 +2,7 @@ from flask import Flask, send_from_directory, request, Response, json
 from flask_cors import CORS
 
 import modeling.assembled_models as am
-from modeling.serializers import serialize
+from modeling.common.serializers import serialize
 from modeling.trainers import ClosedFormFunctionTrainer
 
 app = Flask(__name__)
