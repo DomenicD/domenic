@@ -25,55 +25,55 @@ TODO(domenic): Write this section
 
 TODO(domenic): Write this section
 
+\section{Model}
+
 \subsection{Forward Computation}
 
-The forward computation of a fully connected feedforward neural network with $N$ layers can be described as follows:
-
-\begin{equation}
-x_{n-1} = a_n(t_n(x_n))
-\end{equation}
-
-$\{N \in \mathbb{N} | N > 0\}$
+The forward computation of a fully connected feedforward neural network with $N$ layers can be described as follows:\\
 
 ${n \in N}$
 
-$x_n$ is a vector
-
-$x_N$ is the input vector
-
-$\hat{y} = x_1$ is the output vector
+$\{N \in \mathbb{N} | N > 0\}$
 
 $t_n(x)$ is a transform function
 
-$a_n(x)$ is an activation function\\
+$a_n(x)$ is an activation function
 
-The standard transform function, $t_n(x)$, is:
+$x_n$ is the vector of inputs to layer $n$
+
+$x_N$ is the initial input given to the network
+
+$x_{n-1} = a_n(t_n(x_n))$ is how the next layers input is computed
+
+$\hat{y} = x_1$ is the output vector\\
+
+The standard transform function, $t_n(x)$, is:\\
+
+$W_n \in \mathbb{R}^2$
+
+$b_n \in \mathbb{R}$
 
 \begin{equation} \label{eq:standard_transform}
 t_n(x) = f_n(x)
 \end{equation}
 
 \begin{equation} \label{eq:f}
-f_n(x) = x \cdot W_n + b_n
+f_n(x) = x W_n + b_n
 \end{equation}
 
-$W_n \in \mathbb{R}^2$
-
-$b_n \in \mathbb{R}$\\
-
-The transform function proposed in this paper is:
-
-\begin{equation} \label{eq:quad_transform}
-t_n(x) =  f_n(x) \cdot g(x)
-\end{equation}
-
-\begin{equation} \label{eq:g}
-g_n(x) = x \cdot Y_n + c_n
-\end{equation}
+The transform function proposed in this paper is:\\
 
 $Y_n \in \mathbb{R}^2$
 
-$c_n \in \mathbb{R}$\\
+$c_n \in \mathbb{R}$
+
+\begin{equation} \label{eq:quad_transform}
+t_n(x) =  f_n(x) \cdot g_n(x)
+\end{equation}
+
+\begin{equation} \label{eq:g}
+g_n(x) = x Y_n + c_n
+\end{equation}
 
 Rather than using the standard transform, \eqref{eq:standard_transform}, a quadratic transform, \eqref{eq:quad_transform}, is performed. The quadratic transform is a superset of the standard design, which becomes apparent when $Y_n \in \{0,...,0\}$ and $c_n \in \{1, ..., 1\}$. Using a quadratic transformation enables the neural network to represent any bounded degree polynomial over an infinite domain using a finite number of nodes. The standard design would require an infinite number of nodes to do the same.
 
@@ -85,6 +85,64 @@ The total network error given a cost function $c(y, \hat{y})$ is:
 E = \sum_i c(y_i, \hat{y_i})
 \end{equation}
 
+Back propagation was used to train the networks. The key thing about back propagation is that its a dynamic program and caches part of the gradient calculation so it can be reused upstream.\\
+
+$C_n$ is the matrix of cached calculations at level $n$
+
+$C_1 = c'(y, \hat{y})$ the cache is seeded with the derivative of the cost function
+
+\begin{equation} \label{eq:cache_update}
+C_{n+1} = a'_n(x_n) \cdot (C_n \cdot t'_n(x_n)^\top)
+\end{equation}
+
+The gradient of parameter $\theta_n$ is calculated as follows:
+
+\begin{equation}
+\nabla\theta_n = \frac{\partial t_n(x)}{\partial \theta_n} C_n
+\end{equation}
+
+\subparagraph{Quadratic Transform}
+
+The interesting part about using a quadratic transform function, \eqref{eq:quad_transform}, is that the derivative computation now involves a product, which means that in addition to the standard chain rule, the product rule also needs to be used. The derivative of the quadratic transform function is
+
+\begin{equation} \label{eq:quad_transform_prime}
+t'_n(x) = Y_n(x W_n + b_n) + W_n (x Y_n + C_n)
+\end{equation}
+
+and the gradients of the parameters, $\nabla\theta_n$, are
+
+\begin{equation} \label{eq:w_grad}
+\nabla W_n = x_n^\top (g_n(x_n) \cdot C_n)
+\end{equation}
+
+\begin{equation} \label{eq:y_grad}
+\nabla Y_n = x_n^\top (f_n(x_n) \cdot C_n)
+\end{equation}
+
+\begin{equation} \label{eq:b_grad}
+\nabla b_n = g_n(x_n) \cdot C_n
+\end{equation}
+
+\begin{equation} \label{eq:c_grad}
+\nabla c_n = f_n(x_n) \cdot C_n
+\end{equation}
+
+\subsection{Parameter Updating}
+
+When it comes to training a model, computing the gradients of the parameters is only a prerequisite to the real issue at hand, which is modifying the parameters so that they better represent the data. 
+
+\subparagraph{Largest Gradients Filter}
+
+This update strategy was inspired by dropout (citation needed), but rather than randomly dropping nodes during the forward pass, it only updates $X\%$ of parameters based on the size of their gradient during the backwards pass.
+
+\subparagraph{Adaptive Gradient Updater}
+
+This updater analyzes the path of each parameters gradient and uses that to determine how to update the parameter.
+
+\section{Experiments}
+
+TODO(domenic): Write this section
+
 A squared error cost function was used for the experiments in this paper.
 
 \begin{equation} \label{eq:squared_cost}
@@ -94,32 +152,6 @@ c(y, \hat{y}) = \frac{(y - \hat{y})^2}{2}
 \begin{equation} \label{eq:squared_cost_prime}
 c'(y, \hat{y}) = y - \hat{y}
 \end{equation}
-
-Back propagation was used to train the networks. The key thing about back propagation is that its a dynamic program and caches part of the gradient calculation so it can be reused upstream.\\
-
-$C_n$ is the matrix of cached calculations at level $n$\\
-
-The cache is seeded with the derivative of the cost function: 
-
-\begin{equation}
-C_1 = c'(y, \hat{y})
-\end{equation}
-
-At each layer the cache is updated as follows:
-
-\begin{equation}
-C_{n+1} = a'_n(x_n) \cdot (C_n \cdot t'_n(x_n)^\top)
-\end{equation}
-
-While visiting a layer, the gradients for each parameter in $\theta_n$ is calculated:
-
-\begin{equation}
-\delta\theta_n = \theta'_n \cdot C_n
-\end{equation}
-
-\section{Experiments}
-
-TODO(domenic): Write this section
 
 \section{Conclusion}
 
