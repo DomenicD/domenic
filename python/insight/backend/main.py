@@ -3,6 +3,7 @@ from flask_cors import CORS
 
 import modeling.assembled_models as am
 from modeling.common.serializers import serialize
+from modeling.layers import QuadraticLayer, LinearLayer
 from modeling.trainers import ClosedFormFunctionTrainer
 
 app = Flask(__name__)
@@ -23,7 +24,9 @@ def create_network():
     options = request.json["options"]
 
     if network_type == "QUADRATIC_FEED_FORWARD":
-        network = am.quadratic_feed_forward_network(layers, options["updater"])
+        network = am.feed_forward_network(QuadraticLayer, layers, options["updater"])
+    elif network_type == "STANDARD_FEED_FORWARD":
+        network = am.feed_forward_network(LinearLayer, layers, options["updater"])
     else:
         raise ValueError(network_type + " is not implemented")
 

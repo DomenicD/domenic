@@ -11,13 +11,50 @@ from modeling.parameter_updaters import ParameterUpdater
 class LinearFeedForwardTest(unittest.TestCase):
     def test_forward_pass(self):
         layers = [
-            LinearLayer(1, 3, level=1, parameter_updater=ParameterUpdater([])),
-            LinearLayer(3, 1, level=2, parameter_updater=ParameterUpdater([]))
+            LinearLayer(2, 3, level=1, parameter_updater=ParameterUpdater([]),
+                        parameter_generator=SequenceParameterGenerator()),
+            LinearLayer(3, 1, level=2, parameter_updater=ParameterUpdater([]),
+                        parameter_generator=SequenceParameterGenerator())
         ]
         feed_forward = FeedForward(layers)
-        feed_forward.forward_pass([2])
-        # TODO(domenic): Create tests for a network that uses LinearLayer
-        np.testing.assert_allclose(layers[-1].outputs, [784])
+
+        feed_forward.forward_pass([-3, 3])
+        np.testing.assert_allclose(layers[-1].outputs, [1])
+
+        feed_forward.forward_pass([.3, .7])
+        np.testing.assert_allclose(layers[-1].outputs, [.64])
+
+    def test_backward_pass_basic(self):
+        layers = [
+            LinearLayer(2, 3, level=1, parameter_updater=ParameterUpdater([]),
+                        parameter_generator=SequenceParameterGenerator()),
+            LinearLayer(3, 1, level=2, parameter_updater=ParameterUpdater([]),
+                        parameter_generator=SequenceParameterGenerator())
+        ]
+        feed_forward = FeedForward(layers)
+        feed_forward.forward_pass([.3, .7])
+        feed_forward.backward_pass([1.5])
+        self.assertAlmostEqual(feed_forward.total_error, .3698)
+
+        np.testing.assert_allclose(layers[0].fx_weight_gradients, [[0, 0, -.258], [0, 0, -.602]])
+        np.testing.assert_allclose(layers[1].fx_weight_gradients, [[0], [-.2064], [-1.4104]])
+
+        np.testing.assert_allclose(layers[0].fx_bias_gradients, [0, 0, -.86])
+        np.testing.assert_allclose(layers[1].fx_bias_gradients, [-.86])
+
+    def test_backward_pass_large_network(self):
+        layers = [
+            LinearLayer(3, 5, level=1, parameter_updater=ParameterUpdater([]),
+                        parameter_generator=SequenceParameterGenerator()),
+            LinearLayer(5, 4, level=2, parameter_updater=ParameterUpdater([]),
+                        parameter_generator=SequenceParameterGenerator()),
+            LinearLayer(4, 5, level=3, parameter_updater=ParameterUpdater([]),
+                        parameter_generator=SequenceParameterGenerator())
+        ]
+
+        feed_forward = FeedForward(layers)
+        feed_forward.forward_pass([-5.5, 0, .2])
+        feed_forward.backward_pass([-1.8, 4, 0, 3, -.5])
 
 
 class QuadraticFeedForwardTest(unittest.TestCase):

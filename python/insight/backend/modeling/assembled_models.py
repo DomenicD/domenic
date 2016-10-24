@@ -1,9 +1,9 @@
 from abc import abstractmethod, ABCMeta
-from typing import Sequence
+from typing import Sequence, Callable
 
-from modeling.layers import QuadraticLayer
+from modeling.layers import QuadraticLayer, LinearLayer, Layer
 from modeling.networks import FeedForward
-from modeling.parameter_generators import RandomParameterGenerator
+from modeling.parameter_generators import RandomParameterGenerator, SequenceParameterGenerator
 from modeling.parameter_updaters import ParameterUpdater, \
     LargestGradientsOnly, DeltaParameterUpdateStep, \
     ErrorRegularizedGradient, LogScaledDelta, FlatGradient, FlatLearningRate, Momentum, \
@@ -27,16 +27,17 @@ class FeedForwardUpdater:
 class SimpleUpdater(FeedForwardUpdater):
     def create(self, network: FeedForward) -> ParameterUpdater:
         keep_rate = .5
-        learning_rate = .001
+        learning_rate = .01
 
         steps = DeltaParameterUpdateStep.foreach(
             FlatGradient(),
-            LogScaledDelta(),
+            # LogScaledDelta(),
             FlatLearningRate(learning_rate),
-            Momentum([.9, .1]))
+            # Momentum([.9, .1])
+         )
 
         # Only update the parameters that contributed most to the error.
-        steps.append(LargestGradientsOnly(keep_rate=keep_rate))
+        # steps.append(LargestGradientsOnly(keep_rate=keep_rate))
         return ParameterUpdater(steps)
 
 
@@ -78,15 +79,16 @@ error_regularized_updater = ErrorRegularizedUpdater()
 updaters[error_regularized_updater.name] = error_regularized_updater
 
 
-def quadratic_feed_forward_network(nodes: Sequence[int], updater_key: str) -> FeedForward:
+def feed_forward_network(layer: Callable[..., Layer], nodes: Sequence[int],
+                         updater_key: str) -> FeedForward:
     updater = updaters[updater_key]
     layers = []
     network = FeedForward(layers)
 
     for i in range(len(nodes) - 1):
         layers.append(
-            QuadraticLayer(nodes[i], nodes[i + 1],
-                           level=i,
-                           parameter_updater=updater.create(network),
-                           parameter_generator=RandomParameterGenerator()))
+            layer(nodes[i], nodes[i + 1],
+                  level=i,
+                  parameter_updater=updater.create(network),
+                  parameter_generator=RandomParameterGenerator()))
     return network

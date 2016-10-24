@@ -3,7 +3,7 @@ from typing import Mapping, Sequence
 
 import numpy as np
 
-from modeling.function.activation import Func, IdentityActivation
+from modeling.function.activation import Func, IdentityActivation, RectifiedLinearUnitActivation
 from modeling.domain_objects import ParameterSet, parameter_set_map
 from modeling.parameter_generators import ParameterGenerator, ConstantParameterGenerator
 from modeling.parameter_updaters import ParameterUpdater
@@ -21,14 +21,14 @@ class Layer:
                  output_count: int,
                  level: int,
                  parameter_updater: ParameterUpdater,
-                 activation: Func = IdentityActivation()):
+                 activation: Func):
         self.input_count = input_count
         self.output_count = output_count
         self.level = level
         self.inputs = np.zeros(input_count)
         self.pre_activation = np.zeros(input_count)
         self.outputs = np.zeros(output_count)
-        self.cached_derivative = np.ones(output_count)
+        self.cached_derivative = np.matrix(np.ones(output_count))
         self.parameter_updater = parameter_updater
         self.activation = activation
 
@@ -88,8 +88,9 @@ class LinearLayer(Layer):
                  output_count: int,
                  level: int,
                  parameter_updater: ParameterUpdater,
-                 parameter_generator: ParameterGenerator = ConstantParameterGenerator()):
-        super().__init__(input_count, output_count, level, parameter_updater)
+                 parameter_generator: ParameterGenerator = ConstantParameterGenerator(),
+                 activation: Func = RectifiedLinearUnitActivation()):
+        super().__init__(input_count, output_count, level, parameter_updater, activation)
         # Forward pass parameters
         self.fx_weights = parameter_generator(input_count, output_count)
         self.fx_biases = parameter_generator(1, output_count)[0]  # Get 1-d array.
@@ -108,7 +109,7 @@ class LinearLayer(Layer):
 
     def calculate_gradients(self):
         fx_error = self.cached_derivative
-        self.fx_bias_gradients = fx_error.flatten()
+        self.fx_bias_gradients = fx_error.A1  # A1 converts matrix to 1-d array.
         self.fx_weight_gradients = np.matmul(self.fx_prime, fx_error)
 
     def get_parameters(self) -> Mapping[str, ParameterSet]:
@@ -155,8 +156,9 @@ class QuadraticLayer(Layer):
                  output_count: int,
                  level: int,
                  parameter_updater: ParameterUpdater,
-                 parameter_generator: ParameterGenerator = ConstantParameterGenerator()):
-        super().__init__(input_count, output_count, level, parameter_updater)
+                 parameter_generator: ParameterGenerator = ConstantParameterGenerator(),
+                 activation: Func = IdentityActivation()):
+        super().__init__(input_count, output_count, level, parameter_updater, activation)
         # Forward pass parameters
         self.fx_weights = parameter_generator(input_count, output_count)
         self.fx_biases = parameter_generator(1, output_count)[0]  # Get 1-d array.

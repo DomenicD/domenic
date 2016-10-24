@@ -9,7 +9,7 @@ import {
 import {toNumber, toNumbers} from "../../../../common/util/parse";
 import {PolymerElement} from "@vaadin/angular2-polymer";
 
-const LAMBDA_REGEX = /^lambda [a-z,]+: [ a-z0-9*+\-\/]+$/;
+const LAMBDA_REGEX = /^lambda [a-z,]+: [ a-z0-9*+\-\/()]+$/;
 
 @Component({
   moduleId : module.id,

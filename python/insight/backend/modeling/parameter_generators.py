@@ -12,7 +12,7 @@ class ParameterGenerator:
 
 class RandomParameterGenerator(ParameterGenerator):
     def __call__(self, first_layer: int, second_layer: int) -> np.ndarray:
-        return np.random.rand(first_layer, second_layer) * 2 - .5
+        return np.random.rand(first_layer, second_layer) - .5
 
 
 class SequenceParameterGenerator(ParameterGenerator):
