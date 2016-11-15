@@ -1,6 +1,7 @@
 from abc import abstractmethod, ABCMeta
 from typing import Sequence, Callable
 
+from modeling.function.activation import RectifiedLinearUnitActivation
 from modeling.layers import QuadraticLayer, LinearLayer, Layer
 from modeling.networks import FeedForward
 from modeling.parameter_generators import RandomParameterGenerator, SequenceParameterGenerator
@@ -31,9 +32,9 @@ class SimpleUpdater(FeedForwardUpdater):
 
         steps = DeltaParameterUpdateStep.foreach(
             FlatGradient(),
-            # LogScaledDelta(),
+            LogScaledDelta(),
             FlatLearningRate(learning_rate),
-            # Momentum([.9, .1])
+            Momentum([.9, .1])
          )
 
         # Only update the parameters that contributed most to the error.
@@ -87,8 +88,10 @@ def feed_forward_network(layer: Callable[..., Layer], nodes: Sequence[int],
 
     for i in range(len(nodes) - 1):
         layers.append(
-            layer(nodes[i], nodes[i + 1],
+            layer(nodes[i],
+                  nodes[i + 1],
                   level=i,
+                  activation=RectifiedLinearUnitActivation(),
                   parameter_updater=updater.create(network),
                   parameter_generator=RandomParameterGenerator()))
     return network
