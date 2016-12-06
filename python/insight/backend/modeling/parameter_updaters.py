@@ -111,6 +111,24 @@ class FlatLearningRate(ParameterDeltaTransform):
         return self.learning_rate * parameter.delta.value
 
 
+class DecreasingLearningRate(ParameterDeltaTransform):
+    def __init__(self,
+                 learning_rate: float,
+                 epochs: int,
+                 epoch_getter: Callable[[], int],
+                 degree: float = 1):
+        self.learning_rate = learning_rate
+        self.epochs = epochs
+        self.epoch_getter = epoch_getter
+        self.degree = degree
+
+    def __call__(self, parameter: Parameter) -> float:
+        rate = self.learning_rate * (
+            (self.epochs ** self.degree - self.epoch_getter() ** self.degree) /
+            self.epochs ** self.degree)
+        return rate * parameter.delta.value
+
+
 class ErrorRegularizedGradient(ParameterDeltaTransform):
     def __init__(self, total_error_getter: Callable[[], float]):
         self.total_error_getter_function = total_error_getter
@@ -290,6 +308,15 @@ class FlatGradient(ParameterDeltaTransform):
 class LogScaledDelta(ParameterDeltaTransform):
     def __call__(self, parameter: Parameter) -> float:
         return np.sign(parameter.delta.value) * np.log(1 + abs(parameter.delta.value))
+
+
+class ClampedDelta(ParameterDeltaTransform):
+    def __init__(self, min: float = -1e6, max: float = 1e6):
+        self.min = min
+        self.max = max
+
+    def __call__(self, parameter: Parameter) -> float:
+        return np.clip(parameter.delta.value, self.min, self.max)
 
 
 class LargestDeltasFilter(ParameterUpdateStep):

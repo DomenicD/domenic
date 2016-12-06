@@ -91,5 +91,5 @@ class ClosedFormFunctionTrainer(Trainer):
         return BatchStepResult(inputs, expected, self.network, error)
 
     def _get_validation_set(self) -> Sequence[Sequence[float]]:
-        return itertools.product(range(self.domain[0], self.domain[1], 1),
+        return itertools.product(np.arange(self.domain[0], self.domain[1], .1),
                                  repeat=self.network.input_count)
