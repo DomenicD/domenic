@@ -1,4 +1,4 @@
-from typing import Callable, Tuple
+from typing import Callable, Tuple, Sequence
 
 import tensorflow as tf
 import time
@@ -11,57 +11,65 @@ def input_expected_placeholders(batch_size: int) -> (tf.placeholder, tf.placehol
     return inputs, expected
 
 
-def linear_feedforward(inputs, hidden1_units: int, hidden2_units: int):
-    # Hidden 1
-    with tf.name_scope('hidden1'):
-        weights = tf.Variable(
-            tf.truncated_normal([1, hidden1_units],
-                                stddev=1.0 / math.sqrt(float(1))),
-            name='weights')
-        biases = tf.Variable(tf.zeros([hidden1_units]),
-                             name='biases')
-        hidden1 = tf.nn.relu(tf.matmul(inputs, weights) + biases)
-    # Hidden 2
-    with tf.name_scope('hidden2'):
-        weights = tf.Variable(
-            tf.truncated_normal([hidden1_units, hidden2_units],
-                                stddev=1.0 / math.sqrt(float(hidden1_units))),
-            name='weights')
-        biases = tf.Variable(tf.zeros([hidden2_units]),
-                             name='biases')
-        hidden2 = tf.nn.relu(tf.matmul(hidden1, weights) + biases)
-    # Linear
-    with tf.name_scope('linear_output'):
-        weights = tf.Variable(
-            tf.truncated_normal([hidden2_units, 1],
-                                stddev=1.0 / math.sqrt(float(hidden2_units))),
-            name='weights')
-        biases = tf.Variable(tf.zeros([1]),
-                             name='biases')
-        outputs = tf.matmul(hidden2, weights) + biases
-    return outputs
+# TODO: Use a loop to build the network; then use same method to create
+#       the quadratic feedforward network.
+def linear_feedforward(input_layer, layers: Sequence[int]):
+    prior_node_count = input_layer.get_shape()[1].value
+    for i in range(len(layers)):
+        last_layer = i == len(layers) - 1
+        name = 'output_layer' if last_layer else 'layer_' + str(i)
+        node_count = layers[i]
+        with tf.name_scope(name):
+            weights = tf.Variable(
+                tf.truncated_normal([prior_node_count, node_count],
+                                    stddev=1.0 / math.sqrt(float(1))),
+                name='fw')
+            biases = tf.Variable(tf.zeros([node_count]),
+                                 name='fb')
+            input_layer = tf.matmul(input_layer, weights) + biases
+            if not last_layer:
+                input_layer = tf.nn.relu(input_layer)
+            prior_node_count = node_count
+    return input_layer
 
 
-def quadratic_feedforward():
-    matrix1 = tf.constant([[3., 3.]])
-    matrix2 = tf.constant([[2.], [2.]])
-    product = tf.matmul(matrix1, matrix2)
-    # Forces to run on CPU.
-    with tf.Session() as sess:
-        with tf.device("/cpu:0"):
-            print(sess.run(product))
+def quadratic_feedforward(input_layer, layers: Sequence[int], has_activation: bool = False):
+    prior_node_count = input_layer.get_shape()[1].value
+    for i in range(len(layers)):
+        last_layer = i == len(layers) - 1
+        name = 'output_layer' if last_layer else 'layer_' + str(i)
+        node_count = layers[i]
+        with tf.name_scope(name):
+            fw = tf.Variable(
+                tf.truncated_normal([prior_node_count, node_count],
+                                    stddev=1.0 / math.sqrt(float(1))),
+                name='fw')
+            fb = tf.Variable(tf.zeros([node_count]),
+                             name='fb')
+            gw = tf.Variable(
+                tf.truncated_normal([prior_node_count, node_count],
+                                    stddev=1.0 / math.sqrt(float(1))),
+                name='gw')
+            gb = tf.Variable(tf.zeros([node_count]),
+                             name='gb')
+            input_layer = tf.mul(tf.matmul(input_layer, fw) + fb, tf.matmul(input_layer, gw) + gb)
+            if has_activation and not last_layer:
+                input_layer = tf.nn.relu(input_layer)
+            prior_node_count = node_count
+
+    return input_layer
 
 
-def get_inputs(batch_size: int, range: Tuple[int, int]):
-    min, max = range
-    return tf.random_uniform((batch_size, 1), min, max)
+def get_inputs(batch_size: int, input_range: Tuple[int, int]):
+    min_val, max_val = input_range
+    return tf.random_uniform((batch_size, 1), min_val, max_val)
 
 
-def loss(actual, expected):
-    return tf.nn.l2_loss(tf.sub(actual, expected))
+def loss(actual_output, expected_output):
+    return tf.nn.l2_loss(tf.sub(actual_output, expected_output))
 
 
-def training(loss, learning_rate):
+def traditional_optimizer(loss, learning_rate):
     # Add a scalar summary for the snapshot loss.
     tf.summary.scalar('loss', loss)
     # Create the gradient descent optimizer with the given learning rate.
@@ -74,13 +82,35 @@ def training(loss, learning_rate):
     return train_op
 
 
+def log_scaled_optimizer(loss, learning_rate):
+    # Add a scalar summary for the snapshot loss.
+    tf.summary.scalar('loss', loss)
+    # Create the gradient descent optimizer with the given learning rate.
+    optimizer = tf.train.GradientDescentOptimizer(learning_rate)
+    # Create a variable to track the global step.
+    global_step = tf.Variable(0, name='global_step', trainable=False)
+    # Use the optimizer to apply the gradients that minimize the loss
+    # (and also increment the global step counter) as a single training step.
+    gradients = optimizer.compute_gradients(loss)
+    sign = tf.sign(gradients)
+    log1 = tf.log1p(tf.abs(gradients))
+    tf.Print(sign, sign, 'sign: ')
+    tf.Print(log1, log1, 'log1: ')
+    # TODO: TensorFlow does not like this because compute_gradients()
+    #       returns a tensor of mixed rank.
+    log_gradients = tf.mul(sign, log1)
+    return optimizer.apply_gradients(log_gradients, global_step=global_step)
+
+
 if __name__ == "__main__":
     with tf.Graph().as_default():
         inputs = get_inputs(10, (-5, 5))
         expected = tf.mul(inputs, tf.sin(inputs))
-        model = linear_feedforward(inputs, 5, 5)
+        # model = linear_feedforward(inputs, [2, 2, 1])
+        model = quadratic_feedforward(inputs, [2, 2, 1])
         loss = loss(model, expected)
-        trainer = training(loss, .001)
+        # trainer = traditional_optimizer(loss, .001)
+        trainer = log_scaled_optimizer(loss, .001)
 
         # Build the summary Tensor based on the TF collection of Summaries.
         summary = tf.summary.merge_all()
