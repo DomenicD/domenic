@@ -1,14 +1,14 @@
 from abc import abstractmethod, ABCMeta
 from typing import Sequence, Callable
 
-from modeling.function.activation import RectifiedLinearUnitActivation
+from modeling.function.activation import RectifiedLinearUnitActivation, IdentityActivation
 from modeling.layers import QuadraticLayer, LinearLayer, Layer
 from modeling.networks import FeedForward
 from modeling.parameter_generators import RandomParameterGenerator, SequenceParameterGenerator
 from modeling.parameter_updaters import ParameterUpdater, \
     LargestGradientsOnly, DeltaParameterUpdateStep, \
     ErrorRegularizedGradient, LogScaledDelta, FlatGradient, FlatLearningRate, Momentum, \
-    AdaptiveGradientDerivative
+    AdaptiveGradientDerivative, ClampedDelta
 
 updaters = {}
 
@@ -28,13 +28,13 @@ class FeedForwardUpdater:
 class SimpleUpdater(FeedForwardUpdater):
     def create(self, network: FeedForward) -> ParameterUpdater:
         keep_rate = .5
-        learning_rate = .01
+        learning_rate = .0001
 
         steps = DeltaParameterUpdateStep.foreach(
             FlatGradient(),
-            LogScaledDelta(),
-            FlatLearningRate(learning_rate),
-            Momentum([.9, .1])
+            ClampedDelta(),
+            # LogScaledDelta(),
+            FlatLearningRate(learning_rate)
          )
 
         # Only update the parameters that contributed most to the error.
@@ -57,7 +57,7 @@ class AdaptiveUpdater(FeedForwardUpdater):
 
 
 adaptive_updater = AdaptiveUpdater()
-updaters[adaptive_updater.name] = adaptive_updater
+# updaters[adaptive_updater.name] = adaptive_updater
 
 
 class ErrorRegularizedUpdater(FeedForwardUpdater):
@@ -77,7 +77,7 @@ class ErrorRegularizedUpdater(FeedForwardUpdater):
 
 
 error_regularized_updater = ErrorRegularizedUpdater()
-updaters[error_regularized_updater.name] = error_regularized_updater
+# updaters[error_regularized_updater.name] = error_regularized_updater
 
 
 def feed_forward_network(layer: Callable[..., Layer], nodes: Sequence[int],
@@ -91,7 +91,7 @@ def feed_forward_network(layer: Callable[..., Layer], nodes: Sequence[int],
             layer(nodes[i],
                   nodes[i + 1],
                   level=i,
-                  activation=RectifiedLinearUnitActivation(),
+                  activation=IdentityActivation(),
                   parameter_updater=updater.create(network),
                   parameter_generator=RandomParameterGenerator()))
     return network

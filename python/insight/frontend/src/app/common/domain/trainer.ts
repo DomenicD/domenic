@@ -27,8 +27,8 @@ export class TrainerDomain implements Trainer {
       .toPromise();
   }
 
-  batchTrain(batchSize: string | number = -1): Promise<TrainerDomain> {
-    return this.insightApi.trainerCommand<TrainerBatchResult>(this.id, "batch_train", toNumber(batchSize))
+  batchTrain(batchSize: string | number, epochs: string | number): Promise<TrainerDomain> {
+    return this.insightApi.trainerCommand<TrainerBatchResult>(this.id, "batch_train", toNumber(batchSize), toNumber(epochs))
       .do(result => this.emitBatchResult(result))
       .map(_ => this)
       .toPromise();

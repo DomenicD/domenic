@@ -91,25 +91,25 @@ def log_scaled_optimizer(loss, learning_rate):
     global_step = tf.Variable(0, name='global_step', trainable=False)
     # Use the optimizer to apply the gradients that minimize the loss
     # (and also increment the global step counter) as a single training step.
-    gradients = optimizer.compute_gradients(loss)
-    sign = tf.sign(gradients)
-    log1 = tf.log1p(tf.abs(gradients))
-    tf.Print(sign, sign, 'sign: ')
-    tf.Print(log1, log1, 'log1: ')
-    # TODO: TensorFlow does not like this because compute_gradients()
-    #       returns a tensor of mixed rank.
-    log_gradients = tf.mul(sign, log1)
+    gradients_and_variables = optimizer.compute_gradients(loss)
+    log_gradients = [(tf.mul(tf.sign(grad), tf.log1p(tf.abs(grad))), var)
+                     for grad, var in gradients_and_variables]
     return optimizer.apply_gradients(log_gradients, global_step=global_step)
 
 
 if __name__ == "__main__":
     with tf.Graph().as_default():
-        inputs = get_inputs(10, (-5, 5))
+        inputs = get_inputs(100, (-20, 20))
         expected = tf.mul(inputs, tf.sin(inputs))
+
+        # Linear model
         # model = linear_feedforward(inputs, [2, 2, 1])
-        model = quadratic_feedforward(inputs, [2, 2, 1])
-        loss = loss(model, expected)
+        # loss = loss(model, expected)
         # trainer = traditional_optimizer(loss, .001)
+
+        # Quadratic model
+        model = quadratic_feedforward(inputs, [2, 2, 2, 1])
+        loss = loss(model, expected)
         trainer = log_scaled_optimizer(loss, .001)
 
         # Build the summary Tensor based on the TF collection of Summaries.
@@ -125,8 +125,8 @@ if __name__ == "__main__":
         sess = tf.Session()
 
         # Instantiate a SummaryWriter to output summaries and the Graph.
-        summary_writer = tf.train.SummaryWriter('D:\\git\\domenic\\python\\tensorflow\\logs',
-                                                sess.graph)
+        summary_writer = tf.summary.FileWriter('D:\\git\\domenic\\python\\tensorflow\\logs',
+                                               sess.graph)
 
         # And then after everything is built:
 
@@ -142,7 +142,7 @@ if __name__ == "__main__":
             # inspect the values of your Ops or variables, you may include them
             # in the list passed to sess.run() and the value tensors will be
             # returned in the tuple from the call.
-            _, loss_value = sess.run([trainer, loss])
+            _, loss_value = sess.run([trainer, tf.log1p(loss)])
 
             duration = time.time() - start_time
 
@@ -152,5 +152,6 @@ if __name__ == "__main__":
                 print('Step %d: loss = %.2f (%.3f sec)' % (step, loss_value, duration))
                 # Update the events file.
                 summary_str = sess.run(summary)
+                print(summary_str)
                 summary_writer.add_summary(summary_str, step)
                 summary_writer.flush()

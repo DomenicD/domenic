@@ -50,16 +50,17 @@ class Trainer:
         self.batch_tally = 0
 
     def single_train(self) -> BatchResult:
-        return self.batch_train(1)
+        return self.batch_train(1, 1)
 
-    def batch_train(self, batch_size: int = -1) -> BatchResult:
-        self.network.reset()
+    def batch_train(self, batch_size: int, epochs: int) -> BatchResult:
         if batch_size < 1:
             batch_size = self.batch_size
-        step_results = [self._batch_step() for _ in range(batch_size)]
-        self.step_tally += batch_size
         self.batch_tally += 1
-        batch_result = BatchResult(self.batch_tally, self.network, step_results)
+        for epoch in range(epochs):
+            self.network.reset()
+            step_results = [self._batch_step() for _ in range(batch_size)]
+            self.step_tally += batch_size
+            batch_result = BatchResult(self.batch_tally, self.network, step_results)
         return batch_result
 
     def validate(self) -> ValidationResult:

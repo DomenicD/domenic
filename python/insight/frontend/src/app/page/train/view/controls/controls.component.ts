@@ -16,7 +16,8 @@ export class ControlsComponent implements OnInit {
   @Input()
   trainer: TrainerDomain;
 
-  batchSize: number = 100;
+  batchSize: number = 4;
+  epochs: number = 250;
   isTraining: boolean = false;
   trainingPromise: Promise<boolean>;
 
@@ -37,9 +38,7 @@ export class ControlsComponent implements OnInit {
 
   train() {
     this.isTraining = true;
-    let trainingPromise = this.batchSize > 1 ?
-      this.trainer.batchTrain(this.batchSize) :
-      this.trainer.singleTrain();
+    let trainingPromise = this.trainer.batchTrain(this.batchSize, this.epochs);
     this.trainingPromise = trainingPromise
       .then(_ => this.isTraining = false, _ => this.isTraining = false);
   }

@@ -23,7 +23,7 @@
             <paper-checkbox *ngFor="let metric of metricNames"
                             [checked]="isMetricVisible(metric)"
                             (change)="onMetricVisibilityChanged(metric, $event.target.checked)">
-              {{metric}}
+              {{metricDisplayName(metric)}}
             </paper-checkbox>
           </div>
         </div>

@@ -20,5 +20,12 @@ def cpu_session():
             print(sess.run(product))
 
 
+def debug():
+    sess = tf.InteractiveSession()
+    a = tf.convert_to_tensor([[1, 2, 3], [2, 2, 2]])
+    print(tf.rank(a).eval())
+    sess.close()
+
+
 if __name__ == "__main__":
-    gpu_session()
+    debug()

@@ -113,6 +113,19 @@ export class DetailsComponent implements OnInit {
     this.detail = this.parameterDetails.get(key);
   }
 
+  metricDisplayName(metric: string) {
+    switch (metric) {
+      case DELTA_ROW_NAME:
+        return 'Deltas';
+      case GRADIENT_ROW_NAME:
+        return 'Gradients';
+      case WEIGHT_ROW_NAME:
+        return 'Weights';
+      default:
+        throw new Error(`No display name for metric [${metric}]`);
+    }
+  }
+
   private updateParameters(batchResult: TrainerBatchResult) {
     let paramSetMaps = batchResult.parameters;
     for (let paramSetMap of paramSetMaps) {

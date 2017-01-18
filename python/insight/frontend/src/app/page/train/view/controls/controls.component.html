@@ -1,11 +1,14 @@
 <paper-card class="controls" heading="Controls">
   <div class="card-content">
     <div class="layout horizontal">
-      <paper-button raised (click)="train()">Single</paper-button>
       <paper-input label="Batch size"
                    type="number"
                    min="1"
                    [(value)]="batchSize"></paper-input>
+      <paper-input label="Epochs"
+                   type="number"
+                   min="1"
+                   [(value)]="epochs"></paper-input>
       <paper-button raised (click)="train()">Batch</paper-button>
       <paper-icon-button raised
                          icon="av:play-arrow"

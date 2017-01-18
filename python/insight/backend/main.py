@@ -5,6 +5,8 @@ import modeling.assembled_models as am
 from modeling.common.serializers import serialize
 from modeling.layers import QuadraticLayer, LinearLayer
 from modeling.trainers import ClosedFormFunctionTrainer
+import math
+import numpy as np
 
 app = Flask(__name__)
 CORS(app)
