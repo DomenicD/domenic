@@ -11,8 +11,6 @@ def input_expected_placeholders(batch_size: int) -> (tf.placeholder, tf.placehol
     return inputs, expected
 
 
-# TODO: Use a loop to build the network; then use same method to create
-#       the quadratic feedforward network.
 def linear_feedforward(input_layer, layers: Sequence[int]):
     prior_node_count = input_layer.get_shape()[1].value
     for i in range(len(layers)):
